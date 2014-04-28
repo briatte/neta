@@ -1,0 +1,133 @@
+#sigma-container {
+  width: 100%;
+  height: 100%;
+  margin: auto;
+  padding: 0;
+  z-index: 1;
+}
+
+#controls, #caption {
+/*  background: #444;*/
+  position: absolute;
+  top: 0;
+  opacity: 1;
+  z-index: 2;      
+}
+
+#controls::after, #caption::after {
+  content: "";
+   opacity: 0.3;
+   top: 0;
+   left: 0;
+   bottom: 0;
+   right: 0;
+   position: absolute;
+   z-index: -1;
+}
+
+#controls { 
+  max-width: 360px; 
+  bottom: 0; 
+  border: 3px solid #666;
+  border-width: 0 1px 0 0;
+  overflow: scroll;
+  font-size: 80%;
+}
+
+footer {
+  clear: left;
+  padding: 1em 20px 0 0;
+  text-align: justify;
+  font-size: 75%;
+  line-height: 150%;
+}
+
+.bg_an:after { background: #003; }
+.bg_se:after { background: #300; }
+
+#caption {
+  max-width: 680px; 
+  margin: 20px 15px 0;
+  right: 0;
+  padding: 0;
+}
+
+#caption p { padding: 30px; }
+
+#caption img {
+  border: 1px solid #eee;
+  float: left;
+  height: 200px;
+  margin-right: 15px;
+  min-width: 140px;
+  max-width: 140px;
+}
+
+#controls:hover::after, #caption:hover::after { opacity: 0.6; }
+
+a {
+  color: #ff6;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #ff9;
+  text-decoration: underline;
+}
+
+a:active, a.here { color: #fff; }
+
+a.here, a.button {
+  padding: 3px 6px;
+  border: 1px solid #999;
+  text-decoration: none;
+}
+
+a.button {
+  float: left;
+  margin: 0 0 0 1em;
+  padding: 3px 5px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #fff;
+  display:inline-block;
+  font-size:15px;
+  font-style:normal;
+  height:45px;
+  line-height:45px;
+  width:110px;
+  text-transform: uppercase;
+  text-decoration:none;
+  text-align:center;
+  
+}
+
+a.button:hover {
+  color: #ff9;
+  border-color: #ff9;
+}
+
+h1, h2, p {
+  clear: left;
+  padding: 15px;
+  margin:0;
+}
+
+h1 {
+  letter-spacing: 1.2px;
+  font-variant: small-caps;
+  font-weight: normal;
+  font-size: 150%;
+  padding: 25px 15px 5px;
+  float: left;
+  border-bottom: 1px solid white;
+}
+
+h2 {
+  font-size: 130%;
+  font-weight: 600;
+}
+
+h2 img {
+  clear: left;
+}
