@@ -1,0 +1,36 @@
+\documentclass[10pt,a4paper]{article}
+\input{preamble}
+
+<<functions, include = FALSE>>=
+source("codebooks.r")
+@
+
+<<data>>=
+db = get_db("dosleg")
+@
+
+<<parse_tables>>=
+tbl = parse_tables(db)
+@
+
+<<parse_columns>>=
+var = parse_columns(db, tbl)
+@
+
+%
+\begin{document}
+
+  \section*{Index des tables de la base \texttt{Dosleg}}
+  \footnotesize{
+    \input{abstract}
+
+<<print_tables, include = TRUE>>=
+tables = lapply(tbl[, 1], print_table)
+if(update)
+  write.table(tbl, sep = "\t", row.names = FALSE, fileEncoding = "UTF-8",
+              file = "dosleg.tsv")
+@
+
+  }
+
+\end{document}
