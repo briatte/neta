@@ -1,14 +1,18 @@
 
-The `an` and `se` files hold data and network objects for both chambers of Parliament from legislature 8 (1986) to today. Senate amendments are available only from 2001 (legislature 11) to today, and National Assembly amendments from late 2004 (legislature 12) to today.
+# DATA
 
-The networks are built from roughly one third of the overall data (detailed below), by sampling all legislative items authored by more than one Member of Parliament who sat in the chamber during the observation period. There are a few missing data here and there due to minor parser errors.
+The data collected in this repo is a sample of roughly 100,000 legislation items:
 
 | chamber           | file | bills | amendments |
 |:------------------|:-----|:------|:-----------|
 | National Assembly | `an` | 4,670 | 60,048     |
 | Senate            | `se` | 2,194 | 36,160     |
 
-> The scraper and SQL databases were last updated on April 6, 2014.
+The `an` and `se` files hold the data and their corresponding network objects for both chambers of Parliament from legislature 8 (1986) to today. Data were last collected on April 6, 2014 from [assemblee-nationale.fr](http://www.assemblee-nationale.fr/), [senat.fr](http://www.senat.fr/) and [data.senat.fr](http://data.senat.fr/) for the Ameli and Dosleg databases.
+
+Bills and resolutions were available in both chambers for the entire observation period. Senate amendments are available only from 2001 (legislature 11) to today, and National Assembly amendments from late 2004 (legislature 12) to today (legislature 14).
+
+The networks are built from roughly one third of the overall data, by sampling all legislative items authored by more than one Member of Parliament who sat in the chamber during the observation period. There are a few missing data here and there due to minor parser errors.
 
 The internal structure of the most relevant objects are listed below.
 
@@ -39,7 +43,7 @@ All datasets contain a `nodes` object holding:
 * `url`: link to National Assembly or Senate profile
 * `sample`: network sample marker
 
-All data come from [assemblee-nationale.fr](http://www.assemblee-nationale.fr/) and [senat.fr](http://www.senat.fr/); the Ameli and Dosleg databases are from [data.senat.fr](http://data.senat.fr/); geocodes are from [Google](https://developers.google.com/maps/terms) and exclude the overseas. Geocodes in GEXF exports are processed through 5% random noise to avoid overplotting.
+Geocodes are from [Google](https://developers.google.com/maps/terms) and exclude the overseas. The geocodes exported to the GEXF networks are first processed through 5% random noise to avoid overplotting.
 
 # LEGISLATION
 
