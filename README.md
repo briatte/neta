@@ -1,17 +1,22 @@
 
-## Legislative cosponsorship networks in the French Parliament
+# Legislative cosponsorship networks in the French Parliament
 
 ![](preview.png)
 
 > See an [interactive visualization](http://briatte.org/sigma/) of the results, or read the draft documentation:
 
 * [replication notes](HOWTO.md)
-<!-- * [conference slides][lawfactory2014]
-* [working paper](paper) -->
+
+<!-- 
+
+* [conference slides][lawfactory2014]
+* [working paper](paper) 
+
+-->
 
 [lawfactory2014]: http://f.briatte.org/research/slides-lawfactory2014/
 
-## THANKS
+# THANKS
 
 * [Authueil][authueil] and [Benjamin][roux] from [Regards Citoyens][rc] for comments
 * [Baptiste Coulmont](http://coulmont.com/blog/2011/09/02/travail-de-deputes/) for inspiration
