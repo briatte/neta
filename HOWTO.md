@@ -51,6 +51,6 @@ The `get_ameli2` scraper function can also try to reconstitute the `Ameli` data 
 
 * * *
 
-See the `README` files of the [`app`](https://github.com/briatte/neta/blob/master/app/README.md) and [`data`](https://github.com/briatte/neta/blob/master/data/README.md) folders for additional details. The code also contains a few additional documentation lines.
+See the `README` files of the [`app`](https://github.com/briatte/neta/blob/master/app/README.md) and [`data`](https://github.com/briatte/neta/blob/master/data/README.md) folders for additional details. The code also contains some internal documentation.
 
 [makefile]: https://github.com/briatte/neta/blob/master/make.r

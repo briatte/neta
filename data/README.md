@@ -1,18 +1,16 @@
 
 # DATA
 
-The data collected in this repo is a sample of roughly 100,000 legislation items:
+The `an` and `se` files hold cosponsored legislation and their corresponding network objects for both chambers of Parliament from legislature 8 (1986) to today. Data were last collected on April 6, 2014 from [assemblee-nationale.fr](http://www.assemblee-nationale.fr/), [senat.fr](http://www.senat.fr/) and [data.senat.fr](http://data.senat.fr/) for the Ameli and Dosleg databases. The overall sample contains roughly 100,000 legislation items:
 
 | chamber           | file | bills | amendments |
 |:------------------|:-----|:------|:-----------|
 | National Assembly | `an` | 4,670 | 60,048     |
 | Senate            | `se` | 2,194 | 36,160     |
 
-The `an` and `se` files hold the data and their corresponding network objects for both chambers of Parliament from legislature 8 (1986) to today. Data were last collected on April 6, 2014 from [assemblee-nationale.fr](http://www.assemblee-nationale.fr/), [senat.fr](http://www.senat.fr/) and [data.senat.fr](http://data.senat.fr/) for the Ameli and Dosleg databases.
+Bills (and resolutions) were available in both chambers for the entire observation period. Senate amendments are available only from 2001 (legislature 11) to today, and National Assembly amendments from late 2004 (legislature 12) to today (legislature 14).
 
-Bills and resolutions were available in both chambers for the entire observation period. Senate amendments are available only from 2001 (legislature 11) to today, and National Assembly amendments from late 2004 (legislature 12) to today (legislature 14).
-
-The networks are built from roughly one third of the overall data, by sampling all legislative items authored by more than one Member of Parliament who sat in the chamber during the observation period. There are a few missing data here and there due to minor parser errors.
+The networks are built from roughly one third of all legislation, by sampling all legislative items authored by more than one Member of Parliament who sat in the chamber during the observation period. There are a few missing data here and there due to minor parser errors.
 
 The internal structure of the most relevant objects are listed below.
 
