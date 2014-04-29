@@ -1,19 +1,16 @@
 
-| file    |                              | N(all)  | N(sampled)   |
-|:--------|:-----------------------------|:--------|:-------------|
-| `bi_an` | National Assembly bills      | 8,909   | 4,761 (53%)  |
-| `am_an` | National Assembly amendments | 84,091  | 40,011 (47%) |
-| `bi_se` | Senate bills                 | 3,759   | 2,181 (58%)  |
-| `am_se` | Senate amendments            | 102,551 | 55,378 (54%) |
+The `an` and `se` files hold data and network objects for both chambers of Parliament from legislature 8 (1986) to today. Senate amendments are available only from 2001 (legislature 11) to today, and National Assembly amendments from late 2004 (legislature 12) to today.
 
-> Last updated 2014-04-06 (scraped and SQL data queried up to that date).
+The networks are built from roughly one third of the overall data (detailed below), by sampling all legislative items authored by more than one Member of Parliament who sat in the chamber during the observation period. There are a few missing data here and there due to minor parser errors.
 
-The data objects carry a `sample` column to identify:
+| chamber           | file | bills | amendments |
+|:------------------|:-----|:------|:-----------|
+| National Assembly | `an` | 4,670 | 60,048     |
+| Senate            | `se` | 2,194 | 36,160     |
 
-* in `amendments`, `bills` and `legislation` data frames: the legislation included in the cosponsorship networks
-* in `sponsors` data frames: the sponsors who sat through the entire legislature and chamber in which the legislative item was examined
+> The scraper and SQL databases were last updated on April 6, 2014.
 
-The internal structures of the most relevant objects are listed below.
+The internal structure of the most relevant objects are listed below.
 
 # SPONSORS
 
@@ -25,38 +22,51 @@ All datasets contain a `nodes` object holding:
 * `nom_de_famille`: family name (uppercased and trimmed)
 * `sexe`: sex (`H`/`F`)
 * `annee_naissance`: date of birth (yyyy)
-* `party`: party family (`COM`, `ECO`, `RAD`, `SOC`, `CEN`, `DRO`, `FN`, `SE`)
+* `party`: party family, ordered from left to right:
 	* `COM`: Communists
 	* `ECO`: Greens
 	* `RAD`: Radical-Socialists
+	* `SE`: unaffiliated MPs
 	* `CEN`: Centrists
 	* `DRO`: Gaullists and rightwing groups
-	* `FN`: _Front national_ (1986)
-	* `SE`: unaffiliated MPs
+	* `FN`: Front national (1986)
 * `mandat`: mandate period (dd/mm/yyyy-dd/mm/yyyy)
 * `nb_mandats`: number of terms served, including current
 * `nom_circo`: constituency
-* `lon`: longitude (excluding overseas)
-* `lat`: latitude (excluding overseas)
-* `reelected`: reelected at end of term (0/1)
+* `lon`: longitude
+* `lat`: latitude
+* `reelected`: reelected at end of term (dummy)
 * `url`: link to National Assembly or Senate profile
+* `sample`: network sample marker
 
-Sponsors include all MPs listed in the National Assembly and Senate biographical databases, minus a few unsolved homonyms (the major ones have been solved).
+All data come from [assemblee-nationale.fr](http://www.assemblee-nationale.fr/) and [senat.fr](http://www.senat.fr/); the Ameli and Dosleg databases are from [data.senat.fr](http://data.senat.fr/); geocodes are from [Google](https://developers.google.com/maps/terms) and exclude the overseas. Geocodes in GEXF exports are processed through 5% random noise to avoid overplotting.
 
 # LEGISLATION
 
-> As of 2014-04-25, data are available for legislatures 8--14 (bills in both chambers), 11--14 (Senate amendments) and 12--14 (National Assembly amendments).
+All datasets contain an `amendments`, `bills` or merged `legislation` object holding:
 
 * `legislature`: Fifth Republic legislature (1--14)
 * `uid`: unique amendment or bill identifier
+	* `AA`: National Assembly amendments
+	* `AB`: National Assembly bill
+	* `SA`: Senate amendment
+	* `SB`: Senate bill
 * `date`: date of introduction
 * `t`: time since legislature started, in days
-* `url`: URL to online _dossier_
 * `texte`: bill number (legislature-specific)
-* `titre`: bill title (if available)
 * `sort`: amendment or bill outcome (_adopté_, _rejeté_, _tombé_, etc.)
-* `government`: introduced by a member of government (0/1)
- 
-The sponsorship data include all nominally cited sponsors from the chamber in which the legislation was introduced, at the time at which it was introduced.
+* `government`: introduced by a member of government (dummy)
+* `sample`: network sample marker
 
-The little missing data are due to bills such as [this one](http://www.assemblee-nationale.fr/9/dossiers/880111.asp), which was introduced in 1988 but examined only 17 years later by additional sponsors.
+Unique identifiers are 12-character strings (padded with zeros where relevant) that start with the codes indicated above, followed by the legislature number, followed by a unique identification number that is inherited from the original database or created by the scraper if absent.
+
+# SPONSORSHIPS
+
+All datasets contain a `sponsorship` object holding:
+
+* `uid`: the legislation unique identifier
+* `name`: the sponsor full name (uppercased and trimmed)
+* `status`: the author status (`author` or `cosponsor`)
+* `sample`: network sample marker
+
+The data parser functions basically match the first column to the legislation data, the second one to the sponsors data, and then create directed edge lists from the sampled sponsors in the third column, from first authors to all other MP cosponsors from the same chamber.

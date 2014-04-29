@@ -9,7 +9,7 @@ Requires:
 # TODO
 
 * `[ ]` [curved weighted edges](https://github.com/jacomyal/sigma.js/issues/157)
-* `[-]` improve geographic placement
-* `[-]` strong ties visualization
+* `[x]` improve geographic placement
+* `[x]` strong ties visualization
 * `[x]` add Senate data
 * `[x]` improve interface

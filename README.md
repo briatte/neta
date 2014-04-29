@@ -6,8 +6,8 @@
 > See an [interactive visualization](http://briatte.org/sigma/) of the results, or read the draft documentation:
 
 * [replication notes](HOWTO.md)
-* [conference slides](slides)
-* [working paper](paper)
+<!-- * [conference slides][lawfactory2014]
+* [working paper](paper) -->
 
 [lawfactory2014]: http://f.briatte.org/research/slides-lawfactory2014/
 
