@@ -84,87 +84,9 @@ plot_data <- function(x, type = "all", verbose = TRUE) {
   
 }
 
-#' Grid alignment for plots
-#' 
-#' @source \url{http://stackoverflow.com/a/9491019/635806}
-vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
-
-# DRAFT
-plot_mandates <- function(data, colors) {
-
-  stopifnot(all(c("mandat_debut", "mandat_fin") %in% names(data)))
-
-  d = data %.%
-    filter(!is.na(mandat_debut), !is.na(mandat_fin)) %.%
-    arrange(mandat_debut, mandat_fin)
-
-  g = qplot(data = d, 
-            y = reorder(nom, mandat_debut), yend = reorder(nom, mandat_debut),
-            x = mandat_debut, xend = mandat_fin, color = groupe, 
-            geom = "segment") + 
-    theme(axis.ticks.y = element_blank(), axis.text.y = element_blank()) +
-    scale_color_manual("", values = colors) + 
-    labs(y = NULL, x = NULL)
-  
-  return(g)
-  
-}
-
-# DRAFT
-plot_sponsorships <- function(sessions = 12:14, file = "plots/sponsorships.pdf") {
-
-  load("")
-  plots = lapply(x, function(i) {
-    
-    x = amendments[ amendments$legislature == i, "uid" ]
-    y = sponsorships[ sponsorships$amendment %in% x, ]
-    z = sponsors[ sponsors$nom %in% unique(y$author), ]
-    
-    z$sponsorships = as.vector(table(subset(y, status == "author")$author)[ rownames(z) ])
-    z$sponsorships[ is.na(z$sponsorships) ] = 0
-    
-    z$cosponsorships = as.vector(table(subset(y, status == "cosponsor")$author)[ rownames(z) ])
-    z$cosponsorships[ is.na(z$cosponsorships) ] = 0
-    
-    z$total = z$sponsorships + z$cosponsorships
-    z = na.omit(z)
-    
-    top = z[ order(-z$total)[1:100], c("nom", "sponsorships", "cosponsorships", "total", "groupe"), ]
-    #top$nom = with(top, factor(top$nom, levels = reorder(nom, total)))
-    
-    g = qplot(data = top, x = reorder(nom, total), y = total, fill = groupe, width = 1,
-              stat = "identity", alpha = "total", geom = "bar") + 
-      geom_bar(aes(y = cosponsorships, alpha = "cosponsored"), stat = "identity") + 
-      scale_alpha_manual("Amendements", 
-                         values = c("total" = 1/4, "cosponsored" = 3/4), 
-                         labels = c("co-signés", "tous")) +
-      scale_fill_manual("", values = colors) +
-      coord_flip() + 
-      guides(alpha = FALSE) +
-      theme_minimal(20) + 
-      theme(axis.text.y = element_blank(),
-            legend.position = "none") +
-      labs(x = NULL, y = NULL)
-    
-    return(g)
-    
-  })
-  
-  g = plots
-  pdf(file, width = 2.5 * 8.27, height = 22)
-  grid.newpage()
-  pushViewport(viewport(layout = grid.layout(1, 4)))
-  print(g[[1]], vp = vplayout(1, 1))
-  print(g[[2]], vp = vplayout(1, 2))
-  print(g[[3]], vp = vplayout(1, 3))
-  print(g[[4]], vp = vplayout(1, 4))
-  dev.off()
-  
-}
-
 #' Plot a weighted cosponsorship network
 #' 
-#' Presets to plot a weighted network with \code{\link{ggnet}}.
+#' Unused (default settings hardcoded into network routine).
 plot_network <- function(net, mode = "kamadakawai", file = NULL,
                            size = 1, max_size = 6, alpha = .5,
                            width = 11, height = 9) {
