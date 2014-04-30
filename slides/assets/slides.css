@@ -1,0 +1,87 @@
+/* 
+    overrides a few CSS styles
+*/
+
+* { color: #444; line-height: 133% !important; }
+    
+pre {
+  border: none !important;
+  padding: 1em !important;
+}
+
+h1, h3 {
+  line-height: 145% !important;
+  margin-right: 25% !important;
+  margin-top: 22px !important;
+  font-size: 115% !important;
+}
+
+/* first slide */
+h1 { font-size: 200% !important; }
+
+/* first slide shortlink */
+h1:hover:after {
+  display: block;
+  position: absolute;
+  top: .5em;
+  right: .5em;
+  content: "goo.gl/wbzQW4";
+  font-size: 100%;
+  font-weight: normal;
+}
+
+a:hover { background: yellow !important; }
+
+.author {
+  font-size: 105%;
+  line-height: 145%;
+  margin-top: 66px;
+  color: rgb(101, 101, 101);
+}
+
+/* writing on dark backgrounds */
+
+.dark * { color: #eee !important; }
+
+/* two-column figure alignment */
+
+.twocol td {
+  padding: 2px 0 2em;
+  border: none;
+  text-align: center;
+  font-size: 85%;
+  width: 390px;
+}
+
+/* last slide */
+
+footer { margin-top: 1em; }
+footer p { font-size: 100% !important; }
+
+.fig { text-align: center; }
+.fig img { max-width: 600px; }
+
+/*
+
+   scaled iframe
+   cf. http://stackoverflow.com/a/3131624/635806
+
+*/
+
+#wrapper { width: 950px; height: 620px; padding: 0; overflow: hidden; }
+
+#scaled-frame { width: 1200px; height: 1200px; border: 0px; }
+
+#scaled-frame {
+  zoom: 0.55;
+  -moz-transform: scale(0.66);
+  -moz-transform-origin: 0 0;
+  -o-transform: scale(0.66);
+  -o-transform-origin: 0 0;
+  -webkit-transform: scale(0.66);
+  -webkit-transform-origin: 0 0;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  #scaled-frame  { zoom: 1;  }
+}

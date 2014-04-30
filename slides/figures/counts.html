@@ -1,0 +1,73 @@
+<!-- updated 2014-04-30
+
+library(plyr)
+tbl = lapply(c("am_se", "bi_se", "am_an", "bi_an"), function(x) {
+  load(paste0("data/", x, ".rda"))
+  data = get(ifelse(grepl("^am", x), "amendments", "bills"))
+  print(tapply(data$sample, data$legislature, sum, na.rm = TRUE) / tapply(data$sample, data$legislature, length))
+  return(data.frame(data = x,
+                    collected = nrow(data),
+                    sampled = sum(data$sample, na.rm = TRUE),
+                    percent = 100 * sum(data$sample, na.rm = TRUE) / nrow(data),
+                    stringsAsFactors = FALSE))
+})
+tbl = rbind.fill(tbl)
+tbl
+# kthxbye
+
+-->
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Legislature', 'Senate amendments', 'Senate bills', 'National Assembly amendments', 'National Assembly bills'],
+          ['8',  , 66, , 38],
+          ['9',  , 64, , 40],
+          ['10', , 53, , 21],
+          ['11', 14, 61, , 60],
+          ['12', 34, 46, 35, 65],
+          ['13', 36, 61, 58, 70],
+          ['14', 36,  58, 46, 69]
+        ]);
+
+        var options = {
+          fontSize: 14,
+          title: 'Percentage of cosponsored items per legislature\n',
+          // titleTextStyle: { color: '#eee' },
+          colors:['rgb(0, 102, 204)','rgb(255, 211, 25)', 'rgb(0, 138, 53)', 'rgb(255, 0, 0)'],
+          backgroundColor: 'transparent',
+          hAxis: {
+            title: 'Legislature (1986-2014)',
+            // textStyle: { color: '#eee' },
+            titleTextStyle: { color: '#333', italic: false }
+          },
+          vAxis: {
+            title: '% cosponsored',
+            minValue: 0,
+            maxValue: 100,
+            // gridlines: {color: '#ccc' },
+            // textStyle: { color: '#eee' },
+            titleTextStyle: { color: '#333', italic: false }
+          },
+          curveType: 'function',
+          legend: {
+            position: 'top',
+            maxLines: 2,
+            textStyle: { color: '#333', fontSize: 11 }
+          },
+          isStacked: true
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="chart_div" style="width: 760px; height: 360px;"></div>
+  </body>
+</html>

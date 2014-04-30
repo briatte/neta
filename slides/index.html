@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<!--
+  Google HTML5 slide template [ simplified pre-io2012 version ]
+
+  Authors: Luke Mahé (code)
+           Marcin Wichary (code and design)
+           
+           Dominic Mazzoni (browser compatibility)
+           Charles Chen (ChromeVox support)
+
+  URL: http://code.google.com/p/html5slides/
+-->
+
+<html>
+  <head>
+    <title>neta (2014)</title>
+
+    <meta charset='utf-8'>
+    <script src='assets/slides.js'></script>
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+    </script>
+    <script type="text/javascript"
+      src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <style>@import url('assets/slides.css');</style>
+  </head>
+  
+  <body style='display: none'>
+
+    <section class='slides layout-regular template-default'>
+      
+      <!-- cover -->
+      <article class="fill nobackground" style="background-image: url(network-deco.png)">
+
+        <h1>
+          <a href="http://f.briatte.org/research/slides-lawfactory2014/">Legislative Cosponsorship Networks <br>in the French Parliament</a>
+        </h1>
+
+        <p class="author">
+          <a href="http://f.briatte.org/">François Briatte</a><br>
+          <a href="http://www.lafabriquedelaloi.fr/conference/">OLDP 2014</a>
+          <!-- July 6, 2012 -->
+        </p>
+      </article>
+      
+      <!-- neta -->
+      <article style="background: url(network-deco-small.png) white no-repeat top right">
+
+        <h3>
+          <code>neta</code> is a set of <code><a href="http://www.r-project.org/" style="color:black;" title="The R Project for Statistical Computing">R</a></code> functions to
+        </h3>
+    
+        <ol>
+          <li>scrape amendments, bills and resolutions from the <a href="http://www.assemblee-nationale.fr/" title="Assemblée nationale">Assemblée nationale</a>,</li>
+          <li>extract similar data out of the SQL databases from the <a href="http://data.senat.fr/">Sénat open data portal</a>, and</li>
+          <li>build each parliamentary legislature since 1986 into a <a href="http://jhfowler.ucsd.edu/cosponsorship.htm">cosponsorship network</a>, and
+          <li>estimate party polarization in each legislature using a <a href="http://www.stat.washington.edu/raftery/Research/latentnet.html">latent space model</a>.
+        </ol>
+    
+        <p style="margin-top:2em;">The code and data live at <a href="https://github.com/briatte/neta">github.com/briatte/neta</a>.</p>
+        <p>An interactive visualization is at <a href="http://briatte.org/sigma">briatte.org/sigma</a>.</p>
+        </p>
+        
+      </article>
+      
+      <!-- table -->      
+      <article class='smaller' style="background: url(network-deco-small.png) white no-repeat top right">
+
+        <h3 >
+          Period: 7 legislatures / 27&nbsp;years
+        </h3>
+        
+        <table>
+          <tr>
+            <th colspan="2">Legislature
+            <th>Prime Ministers
+          <tr>
+            <td>8
+            <td><span class='red'>1986-1988</span>
+            <td><span class='blue'>Chirac</span>, <span class='red'>Rocard</span></span>
+          <tr>
+            <td>9
+            <td><span class='red'>1988-1993</span>
+            <td><span class='red'>Rocard, Cresson, Bérégovoy</span>
+          <tr>
+            <td rowspan="2">10
+            <td><span class='red'>1993-1995</span>
+            <td><span class='blue'>Balladur</span>
+          <tr>
+            <td><span class='blue'>1995-1997</span>
+            <td><span class='blue'>Juppé</span>
+          <tr>
+            <td>11
+            <td><span class='blue'>1997-2002</span>
+            <td><span class='red'>Jospin</span>, <span class='blue'>Raffarin</span>
+          <tr>
+            <td>12<td><span class='blue'>2002-2007</span>
+            <td><span class='blue'>Raffarin, Villepin, Fillon</span>
+          <tr>
+            <td>13<td><span class='blue'>2007-2012</span>
+            <td><span class='blue'>Fillon</span>, <span class='red'>Ayrault</span>
+          <tr>
+            <td>14<td><span class='red'>2012-</span>
+            <td><span class='red'>Ayrault</span>
+        </table>
+
+        <p>Years colored by <span class='red'>left-wing</span> and <span class='blue'>right-wing</span> party affiliations.</p>
+
+        <p><strong>Data sources:</strong> <a href="http://www.assemblee-nationale.fr/" title="Assemblée nationale">Assemblée nationale</a> for the <a href="http://www.assemblee-nationale.fr/sycomore/index.asp">Sycomore MP index</a> and <a href="http://www.assemblee-nationale.fr/documents/index.asp">online files</a>, <a href="http://data.senat.fr/" title="data.senat.fr">Data Sénat</a> for the <a href="http://data.senat.fr/ameli/">Ameli</a> and <a href="http://data.senat.fr/dosleg/">Dosleg</a> databases, and <a href="http://www.senat.fr/" title="Sénat">Sénat</a> for <a href="http://www.senat.fr/anciens-senateurs-5eme-republique/index.html">senator details</a>. The raw data scraped until April 6, 2014 (1.2 GB, 30,000 files) is available per request.</p>
+      </article>
+      
+      
+      <!-- data -->
+      <article class='smaller' style="background: url(network-deco-small.png) white no-repeat top right">
+
+        <h3>
+          Sample: <i>N</i> ~ 100,000
+          <!-- figures from April 30, 2014 -->
+        </h3>
+          
+        <table>
+          <tr>
+            <th>Chamber
+            <th>Amendments
+            <th>Bills
+          <tr>
+            <td>Assemblée nationale
+            <td><strong>60,008</strong> <small>/ 121,908 (49%)</small></td>
+            <td><strong>4,670</strong> <small>/ 8,863 (52%)</small>
+          <tr>
+            <td>Sénat
+            <td><strong>36,160</strong> <small>/ 104,452 (34%)</small></td>
+            <td><strong>2,194</strong> <small>/ 3,800 (57%)</small></td>
+          <tr>
+        </table>
+                        
+        <iframe style = "background: none; margin: 1em 0 0 0; border: none;" src='figures/counts.html'></iframe>
+        
+      </article>
+      
+      <!-- demo -->
+      <article style="background: url(hemicycle_se.jpg) white no-repeat bottom right">
+
+        <div id="wrapper">
+          <iframe id="scaled-frame" data-src="http://briatte.org/sigma/" src="http://briatte.org/sigma/"></iframe> DEBUG
+        </div>
+
+      </article>
+
+    <!-- network -->
+    <article class='nobackground smaller'>
+
+      <p style="margin-top: 2em; width:800px !important;">
+        <img src="figures/network_an8.png" title="" width="390" />
+        <img src="figures/network_se14.png" title="" width="390" />
+      </p>
+      
+      <table class="twocol">
+        <tr>
+          <td>Assemblée nationale, 1986–1988</td>
+          <td>Sénat, 2012–</td>
+        </tr>
+      </table>
+      
+      <p><small>Each network is a weighted one-mode projection of the dyads formed by all legislation first authors to each of their nominal cosponsors (excluding group signatures) over the complete legislature. Tie construction matches <a href="http://jhfowler.ucsd.edu/cosponsorship.htm">Fowler (2006)</a> and edge weighting matches <a href="http://www.latinodecisions.com/files/4013/3840/2978/Gross-Kirkland-Shalizi_Multilevel-Cosponsorship_PolAnlys-submission.pdf">Gross, Kirkland and Shalizi (2012)</a>.</small></p>
+      
+    </article>
+    
+    <!-- network measures -->
+    <article class='nobackground smaller'>
+
+      <p class="fig"><img style='centered' src="figures/network_measures.png" title="" /></p>
+
+    </article>
+
+    <!-- party measures -->
+    <!-- <article class='nobackground smaller'>
+
+      <p class="fig" style="padding-top:1em;"><img style='centered' src="figures/party_measures.png" title="" /></p>
+
+    </article> -->
+
+    <!-- party clustering -->
+    <!-- <article class='nobackground smaller'>
+
+      <p class="fig"><img style='centered' src="figures/party_clustering.png" title="" /></p>
+
+    </article> -->
+
+    <!-- ERGMM results -->
+    <article class='nobackground smaller'>
+
+      <p style="margin-top: -1.5em; width:800px !important;">
+        <img src="figures/ergmm_an8.png" title="" width="390" />
+        <img src="figures/ergmm_se14.png" title="" width="390" />
+      </p>
+      
+      <table class="twocol">
+        <tr>
+          <td>Assemblée nationale, 1986–1988</td>
+          <td>Sénat, 2012–</td>
+        </tr>
+      </table>
+      
+      <p><small>Two-dimensional <a href="http://www.stat.washington.edu/raftery/Research/latentnet.html">latent space cluster models</a> with random receiver effects, using the same number of groups as there were parliamentary groups in the legislature. Unfilled circles indicate cluster means and variance, and node size is proportional to likelihood of cluster membership.</small></p>
+      
+    </article>
+    
+    <!-- ERGMM animations -->
+    <article class='nobackground smaller'>
+
+      <!-- <h3>by the power of .gif</h3> -->
+
+      <p style="margin-top: -1.5em; width:800px !important;">
+        <img src="figures/ergmm_an8.gif" title="" width="390" />
+        <img src="figures/ergmm_se14.gif" title="" width="390" />
+      </p>
+      
+      <table class="twocol">
+        <tr>
+          <td>Assemblée nationale, 1986–1988</td>
+          <td>Sénat, 2012–</td>
+        </tr>
+      </table>
+      
+      <p><small>Sample of cluster configurations estimated over 2,000 MCMC draws, showing variations in the Minimum Kullback-Leibler estimates of positions in the latent space of cosponsorships. Node colors do <em>not</em> match true membership (parliamentary group) colors.</small></p>
+      
+    </article>
+
+    <!-- modularity -->
+    <!-- <article class='smaller'>
+      
+      <h3>
+        <a href="http://arxiv.org/abs/physics/0602124">Party modularity</a>
+      </h3>
+      
+      <section>
+      
+      <small>
+        is a proxy for <a href="https://people.maths.ox.ac.uk/porterm/papers/modularity_jop.pdf">group-based divisiveness and solidarity</a> in the network $A(i,j)$ of authors $i$ and cosponsors $j$, denoted
+    
+         \[ Q = \frac{1}{2m}\sum_{i,j=1}[ A(i,j) - P(i,j) ]\delta(g_i,g_j) \]
+
+       <p>where</p>
+   
+       <ul>
+         <li>$m = \frac{1}{2} \sum_i k_i$ is the total number of cosponsorships in the network,</li>
+   
+         <li>$P(i,j)$ is the expected total degree of the network (<a href="http://arxiv.org/abs/physics/0605087/">Newman 2006</a>),</li>
+     
+         <li>$g_i$ is the community (i.e. the party) to which a given sponsor $i$ belongs, and</li>
+     
+         <li>$\delta(g_i, g_j)$ is a <a href="https://en.wikipedia.org/wiki/Kronecker_delta">dummy</a> that marks ties between authors $i$ and cosponsors $j$ from the same party, i.e.
+       
+           \[ \delta(g_i, g_j) = \left\{ 
+        \begin{array}{l l}
+          1 & \quad \text{if $g_i = g_j$,}\\
+          0 & \quad \text{otherwise.}
+        \end{array} \right.\]</li>
+       </ul>
+
+      </small>
+
+        </section>
+
+      </article>  -->
+   
+    <!-- end -->
+    <article class='fill nobackground' style="background: url(albanel-lefebvre.jpg) white no-repeat top right">
+      <h3 style="width: 100%;">
+        Thank you for your attention
+      </h3>
+      <footer>
+        <p>Slides: <a href="http://goo.gl/wbzQW4"><code>http://goo.gl/wbzQW4</code></a></p>
+
+        <p>Demo: <a href="http://briatte.org/sigma"><code>http://briatte.org/sigma</code></a></p>
+      </footer>
+    </article>
+
+  </body>
+</html>
