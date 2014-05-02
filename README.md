@@ -6,6 +6,8 @@
 > See an [interactive visualization](http://briatte.org/sigma/) of the results, or read the draft documentation:
 
 * [replication notes](HOWTO.md)
+* [data codebook](data/README.md)
+* [model specifications](data/README.md)
 
 <!-- 
 
