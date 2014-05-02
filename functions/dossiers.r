@@ -1,6 +1,8 @@
 #' Assemblée nationale: scrape depots, projets or propositions de loi
 #'
 #' Available sessions: 8:14 (1986-today), except art. 34-1 resolutions (13:14).
+#' @param key "projets", "propositions", "resolutions", "resol-art34-1" or 
+#' "depots" for all legislative files.
 get_dossiers <- function(key, sessions = 8:14, verbose = FALSE,
                          base = "http://www.assemblee-nationale.fr") {
 

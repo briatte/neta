@@ -86,7 +86,7 @@ plot_data <- function(x, type = "all", verbose = TRUE) {
 
 #' Plot a weighted cosponsorship network
 #' 
-#' Unused (default settings hardcoded into network routine).
+#' @keywords paper draft
 plot_network <- function(net, mode = "kamadakawai", file = NULL,
                            size = 1, max_size = 6, alpha = .5,
                            width = 11, height = 9) {
@@ -124,7 +124,7 @@ plot_network <- function(net, mode = "kamadakawai", file = NULL,
 
 #' Plot legislation outcomes
 #'
-#' Unused (too much missing data in the complete series).
+#' @keywords paper draft
 plot_outcomes <- function(x, type = "all", verbose = TRUE) {
 
   stopifnot(file.exists(paste0("data/", x, ".rda")))
@@ -194,5 +194,388 @@ plot_outcomes <- function(x, type = "all", verbose = TRUE) {
          x, "_outcomes.pdf"), g, width = 12, height = 11)
   
 }
+
+#' Plot mandates
+#'
+#' @keywords paper draft
+plot_mandates <- function(data, colors) {
+  
+  data$mandat_debut = parse_date_time(substr(data$mandat, 1, 10), "%d/%m/%Y")
+  data$mandat_fin = parse_date_time(substr(data$mandat, 14, 23), "%d/%m/%Y")
+print(head(data))
+
+  d = data %.%
+    filter(!is.na(mandat_debut), !is.na(mandat_fin)) %.%
+    arrange(mandat_debut, mandat_fin)
+  
+  g = qplot(data = d, 
+            y = reorder(nom_de_famille, mandat_debut), yend = reorder(nom_de_famille, mandat_debut),
+            x = mandat_debut, xend = mandat_fin, color = party, 
+            geom = "segment") + 
+    theme(axis.ticks.y = element_blank()) +
+    scale_color_manual("", values = colors) + 
+    labs(y = NULL, x = NULL)
+  
+  return(g)
+  
+}
+
+#' Plot example egocentric networks by selecting random sponsors in three groups
+#'
+#' @keywords paper
+plot_egos <- function(x, update = FALSE, which = NULL, root = "paper/figures/") {
+
+  file = paste0(root, "egos_", gsub("data/|.rda", "", x), ".pdf")
+  if(!file.exists(file) | update) {
+
+    load(x)
+    u = ego.extract(net)
+
+    com = subset(nodes, party == "COM")$nom
+    com = sample(com, 2)
+    udf = subset(nodes, party == "CEN")$nom
+    udf = sample(udf, 2)
+    dro = subset(nodes, party == "DRO")$nom
+    dro = sample(dro, 2)
+    soc = subset(nodes, party == "SOC")$nom
+    soc = sample(soc, 2)
+    els = subset(nodes, party %in% c("RAD", "ECO", "FN", "SE"))$nom
+    els = sample(els, 1)
+    
+    if(!is.null(which)) {
+
+      com = which[[ "com" ]][ 1:2 ]
+      udf = which[[ "udf" ]][ 1:2 ]
+      dro = which[[ "dro" ]][ 1:2 ]
+      soc = which[[ "soc" ]][ 1:2 ]
+      els = which[[ "els" ]][ 1 ]
+
+    }
+
+    plot_ego <- function(x, sponsors = nodes, ...) {
+      n = network(u[[ which(names(u) == x) ]])
+      n %v% "id"  = network.vertex.names(n)
+      n %v% "ego" = (n %v% "id" == x)
+      n %v% "party" = sponsors[ n %v% "id", "party" ]
+      k = net %n% "party_colors"
+      k = k [ names(k) %in% unique(n %v% "party") ]
+      n %n% "colors" = k
+
+      message(paste(x, network.size(n), "nodes"))
+
+      g = ggnet(n, mode = "kamadakawai", node.group = n %v% "party", node.color = n %n% "colors",
+                size = 6, segment.color = "grey75", segment.alpha = .5, ...) +
+        geom_point(size = 3) +
+        geom_point(color = k [ sponsors[ x, "party" ] ], size = 12 * as.numeric(n %v% "ego")) +
+        geom_point(color = "black", alpha = .5, size = 12 * as.numeric(n %v% "ego")) +
+        geom_point(color = "white", size = 10 * as.numeric(n %v% "ego")) +
+        geom_point(color = k [ sponsors[ x, "party" ] ], size = 8 * as.numeric(n %v% "ego")) +
+        ggtitle(x) +
+        guides(size = FALSE)
+      return(g)
+      
+    }
+    
+    pdf(file, width = 20, height = 20)
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(3, 3)))
+    print(plot_ego(com[1]), vp = vplayout(1, 1))
+    print(plot_ego(com[2]), vp = vplayout(1, 2))
+    print(plot_ego(udf[1]), vp = vplayout(1, 3))
+    print(plot_ego(udf[2]), vp = vplayout(2, 1))
+    print(plot_ego(dro[1]), vp = vplayout(2, 2))
+    print(plot_ego(dro[2]), vp = vplayout(2, 3))
+    print(plot_ego(soc[1]), vp = vplayout(3, 1))
+    print(plot_ego(soc[2]), vp = vplayout(3, 2))
+    print(plot_ego(els[1]), vp = vplayout(3, 3))
+    dev.off()
+    
+  }
+  
+}
+
+#' Plot top fifty legislation sponsors in the last two legislatures
+#'
+#' @keywords paper draft
+plot_sponsorships <- function(file, sessions = 13:14) {
+
+  fig = gsub("data/", "paper/figures/sponsorships_", file)
+  fig = gsub(".rda", ".pdf", fig)
+
+  if(!file.exists(fig)) {
+
+    load(file)
+    
+    g = lapply(sessions, function(i) {
+      
+      x = legislation[ legislation$legislature == i, "uid" ]
+      y = sponsorships[ sponsorships$uid %in% x, ]
+      z = get(paste0("nodes", i))
+      z = z[ sponsors$nom %in% unique(y$name), ]
+      
+      z$sponsorships = as.vector(table(subset(y, status == "author")$name)[ z$nom ])
+      z$sponsorships[ is.na(z$sponsorships) ] = 0
+      
+      z$cosponsorships = as.vector(table(subset(y, status == "cosponsor")$name)[ z$nom ])
+      z$cosponsorships[ is.na(z$cosponsorships) ] = 0
+      
+      z$total = z$sponsorships + z$cosponsorships
+      
+      top = z[ order(-z$total)[1:50], c("nom_de_famille", "sponsorships", "cosponsorships", "total", "party"), ]
+      #top$nom = with(top, factor(top$nom, levels = reorder(nom, total)))
+      
+      g = qplot(data = top, x = reorder(nom_de_famille, total), y = total, fill = party, width = 1,
+                stat = "identity", alpha = "total", geom = "bar") + 
+        geom_bar(aes(y = cosponsorships, alpha = "cosponsored"), stat = "identity") + 
+        scale_alpha_manual("Amendements", 
+                           values = c("total" = 1/4, "cosponsored" = 3/4), 
+                           labels = c("co-signés", "tous")) +
+        scale_fill_manual("", values = get(paste0("colors", i))) +
+        coord_flip() + 
+        guides(alpha = FALSE) +
+        theme_minimal(20) + 
+        theme(legend.position = "none") +
+        labs(x = NULL, y = NULL)
+      
+      return(g)
+      
+    })
+    
+    pdf(fig, width = 15, height = 20)
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(1, 2)))
+    print(g[[1]], vp = vplayout(1, 1))
+    print(g[[2]], vp = vplayout(1, 2))
+    dev.off()
+    
+  }
+  
+}
+
+#' Plot party-level measures
+#'
+#' @keywords paper
+plot_groups <- function(sessions = 8:14) {
+
+  if(length(dir("paper/figures", "^party(.*).pdf")) < 2) {
+    
+    colors = c(
+      "COM" = "#E41A1C", # Communists (leftwing, red)
+      "ECO" = "#4DAF4A", # Greens (leftwing, green)
+      "RAD" = "#FFFF33", # Radicals (leftwing, yellow)
+      "SOC" = "#F781BF", # Socialists (or Leftwing coalition, pink)
+      "SE" = "#999999",  # Unaffiliated/Unknown (grey)
+      "CEN" = "#FF7F00", # Centrists (RI, UDF, UDI, NC...; rightwing, orange)
+      "DRO" = "#377EB8", # Rightwing (Gaullists, RPR + DL, UMP; blue)
+      "FN" = "#A65628"   # Front National (extreme-right, brown)
+    )
+
+    party_measures <- function(x, ch, update = TRUE, weights = "wpc") {
+  
+      data = paste0("data/", ch, x, ".rda")
+      if(file.exists(data))
+        load(data)
+      else
+        load(paste0("data/bi_", ch, x, ".rda"))
+  
+      t = table(nodes$party)
+      nodes$n_au = as.vector(nodes$n_au)
+      nodes$n_co = as.vector(nodes$n_co)
+      nodes$total = with(nodes, log10(n_au + n_co))
+      nodes$n = t[ nodes$party ]
+      nodes$hf = as.numeric(nodes$sexe == "F")
+      nodes$age = c(1986, 1988, 1993, 1997, 2002, 2007, 2012)[ x - 7 ]
+      nodes$age = with(nodes, age - annee_naissance)
+      nodes$senior = nodes$nb_mandats > 1
+      nodes$noob = nodes$nb_mandats == 1
+      if(x == 14) nodes$reelected = NA
+
+      nodes = nodes[, c("party", "n", "senior", "noob", "age", "hf", "total", "degree", "distance", "clustering", "betweenness", "closeness", "constraint") ]
+      names(nodes) = c("party", "N", "Senior MPs", "New MPs", "Age", "Female", "log10(Sponsorships)", "Centralization", "Distance", "Clustering", "Betweenness", "Closeness", "Constraint")
+  
+      return(data.frame(chamber = ifelse(ch == "an", "Assemblée nationale", "Sénat"),
+                        Legislature = x, nodes, stringsAsFactors = FALSE))
+  
+    }
+
+    se = rbind.fill(lapply(sessions, party_measures, ch = "se"))
+    an = rbind.fill(lapply(sessions, party_measures, ch = "an"))
+    da = melt(rbind(an, se), c("chamber", "Legislature", "party"))
+
+    da = subset(da, !is.na(value) & !is.nan(value) & !is.infinite(value))
+    g = qplot(data = subset(da, !(party %in% c("SE", "FN", "ECO"))),
+          x = Legislature, y = value, group = party, fill = party, color = party,
+          stat = "summary", fun.y = "mean", geom = c("line", "point")) +
+      scale_x_continuous(breaks = sessions) +
+      scale_colour_manual("", values = colors) +
+      scale_fill_manual("", values = colors) +
+      facet_wrap(~ variable, ncol = 3, scales = "free_y") +
+      labs(y = NULL, x = "\nLegislature (1986-2014)") +
+      theme_grey(16) +
+      coord_equal() +
+      theme(legend.position = "bottom", panel.grid = element_blank())
+
+    ggsave("paper/figures/party_measures.pdf", g, width = 10, height = 9)
+
+    da$data = ifelse(da$Legislature < 11, "1986-1997 (sparse networks)", "1997-2014 (dense networks)")
+    g = qplot(data = subset(da, variable == "Clustering" & !(party %in% c("SE"))), x = Legislature, y = value,
+              fill = party, color = party, group = party, 
+              stat = "summary", fun.y = "mean",
+              geom = c("point", "line")) +
+      scale_x_continuous(breaks = sessions) +
+      scale_y_continuous(lim = c(0, 1)) +
+      scale_colour_manual("", values = colors) +
+      scale_fill_manual("", values = colors) +
+      facet_grid(chamber ~ data, scales = "free_x") +
+      labs(y = "Clustering (weighted transitivity)\n", x = "\nLegislature (1986-2014)") +
+      theme_grey(16) +
+      coord_equal() +
+      theme(legend.position = "bottom", panel.grid = element_blank())
+  
+    ggsave("paper/figures/party_clustering.pdf", g, width = 9, height = 9)
+    
+  }
+  
+}
+
+#' Plot network statistics and node attributes
+#'
+#' @keywords paper
+plot_attributes <- function(sessions = 8:14) {
+  
+  maximize_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
+
+    file = paste0("models/modularity/", ch, x, ".rda")
+    chamber = ifelse(ch == "an", "Assemblée nationale", "Sénat")
+  
+    data = paste0("data/", ch, x, ".rda")
+    if(file.exists(data))
+      load(data)
+    else
+      load(paste0("data/bi_", ch, x, ".rda"))
+  
+    if(!file.exists(file) | update) {
+    
+      message(paste("Modeling", chamber, "legislature", x))
+
+      tnet = as.tnet(as.sociomatrix(net), type = "weighted one-mode tnet")
+  
+      # Gross, Kirkland and Shalizi 2012
+      if(weights == "wpc") {
+        wpc = table(tnet[, 1])[ as.character(tnet[, 1]) ]
+        tnet = cbind(tnet[, 1:2], w = tnet[, 3] / wpc)
+      }
+  
+      # symmetrise for undirected algorithms 
+      tnet = symmetrise_w(tnet, method = "AMEAN") # answers warning above
+  
+      # rename vertices
+      tnet = data.frame(
+        i = network.vertex.names(net)[ tnet[, 1] ],
+        j = network.vertex.names(net)[ tnet[, 2] ],
+        w = tnet[, 3]
+        )
+
+      # convert to igraph
+      inet = graph.edgelist(as.matrix(tnet[, 1:2]), directed = FALSE)
+      E(inet)$weight = tnet[, 3]
+
+      # V(inet)$name = V(inet)$nom ## if merging to nodes
+
+      # maximized Walktrap (Waugh et al. 2009, arXiv:0907.3509, Section 2.3)
+      walktrap = lapply(1:50, function(x) walktrap.community(inet, steps = x))
+  
+      # max. partition
+      maxwalks = order(sapply(walktrap, modularity), decreasing = TRUE)[1]
+      walktrap = walktrap[[ maxwalks ]]
+  
+      message(paste("Maximized to", n_distinct(walktrap[[ "membership" ]]), "groups (Walktrap,", maxwalks, "steps out of 50)"))
+  
+      # multilevel Louvain (Blondel et al. 2008, arXiv:0803.0476)
+      louvain = multilevel.community(inet)
+
+      message(paste("Maximized to", n_distinct(louvain[[ "membership" ]]), "groups (Louvain)"))
+
+      save(inet, walktrap, louvain, file = file)
+
+    } else {
+    
+      load(file)
+
+    }
+
+    return(data.frame(chamber,
+                      Legislature = x,
+                      # dimensions
+                      Vertices = network.size(net),
+                      Edges = network.edgecount(net),
+                      Density = net %n% "density",
+                      # weighted
+                      Centralization = net %n% "degree",
+                      Distance = net %n% "distance",
+                      Clustering = net %n% "clustering",
+                      # modularity
+                      Modularity = net %n% "modularity",
+                      Walktrap = modularity(walktrap),
+                      Louvain = modularity(louvain),
+                      # NodeD = mean(net %v% "degree", na.rm = TRUE),
+                      Betweenness = mean(net %v% "betweenness", na.rm = TRUE),
+                      Closeness = mean(net %v% "closeness", na.rm = TRUE),
+                      # NodeCLU = mean(net %v% "clustering", na.rm = TRUE),
+                      Constraint = mean(net %v% "constraint", na.rm = TRUE),
+                      stringsAsFactors = FALSE)
+          )
+
+  }
+
+  se = rbind.fill(lapply(sessions, maximize_modularity, ch = "se"))
+  an = rbind.fill(lapply(sessions, maximize_modularity, ch = "an"))
+  da = melt(rbind(an, se), c("chamber", "Legislature"))
+
+  # mark amendments series
+  dots_an = subset(da, chamber == "Assemblée nationale" & Legislature > 11)
+  dots_se = subset(da, chamber == "Sénat" & Legislature > 10)
+
+  g = qplot(data = da, x = Legislature, y = value,
+            color = chamber, geom = "line") +
+    geom_point(data = dots_an) +
+    geom_point(data = dots_se) +
+    scale_x_continuous(breaks = sessions) +
+    scale_colour_brewer("", palette = "Set2") +
+    facet_wrap(~ variable, ncol = 3, scales = "free_y") +
+    labs(y = NULL, x = "\nLegislature (1986-2014)") +
+    theme_grey(16) +
+    theme(legend.position = "bottom", panel.grid = element_blank())
+
+  ggsave("paper/figures/network_measures.pdf", g, width = 9, height = 9)
+
+}
+
+#' Grid alignment for plots
+#' 
+#' @source \url{http://stackoverflow.com/a/9491019/635806}
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+#' Black and white theme, large text
+#'
+#' @keywords paper
+theme_neta <- theme_minimal(16) + 
+  theme(
+    panel.border = element_rect(fill = NA, color = "white"),
+    panel.grid.major.x = element_line(color = "white"),
+    panel.grid.minor.x = element_line(color = "white"),
+    plot.margin = unit(c(1, 1, 1, 1), "cm"),
+    plot.title = element_text(face = "bold", vjust = 1),
+    axis.title.y = element_text(angle = 90, vjust = -.25),
+    axis.title.x = element_text(vjust = -1),
+    legend.key = element_rect(color = "white"),
+    legend.key.size = unit(16, "pt"), 
+    legend.position = "bottom", 
+    legend.margin = unit(32, "pt"),
+    legend.title = element_text(size = 16, face = "bold"),
+    legend.text = element_text(size = 16, face = "plain"),
+    strip.background = element_rect(fill = NA, color = "white"),
+    strip.text = element_text(size = 16, face = "plain")
+)
 
 # have a nice day
