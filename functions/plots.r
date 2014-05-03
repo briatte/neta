@@ -13,9 +13,9 @@ plot_data <- function(x, type = "all", verbose = TRUE) {
   if(type != "all")
     data = data[ data$type == type, ]
 
-  #data = data[ with(data, !is.na(legislature) & !is.na(date)), ]
   data = na.omit(data[, c("uid", "legislature", "date", "t", "government", "sample") ])
-  
+  data = data[ !data$government, ] # keep MP legislation, incl. single-authored
+
   # legislature floor dates
   years = c("1986-03-16", "1988-06-05", "1993-03-21", "1997-05-25", "2002-06-09", "2007-06-10", "2012-06-10")
   data$tmin = as.Date( years[ data$legislature - 7 ] )
@@ -37,18 +37,25 @@ plot_data <- function(x, type = "all", verbose = TRUE) {
   t = summarise(group_by(sponsorships, uid), n_authors = length(name))
   data = left_join(data, t, by = "uid")
 
+  # single-authored legislation
+  data$n_authors[ !data$sample | is.na(data$n_authors) ] = 1
+
   # manual breaks
   b = c(0, 1, 2, 5, 10, 25, 50, 100, 250, 500, Inf)
   data$q_authors = cut(data$n_authors, breaks = b, include.lowest = TRUE)
-  data$q_authors[ data$government ] = NA
 
-  if(verbose)
-    print(table(year(data$date), data$legislature))
+  print(summarise(group_by(data, q_authors),
+          n = length(n_authors),
+          min = min(n_authors, na.rm = TRUE),
+          med = median(n_authors, na.rm = TRUE),
+          max = max(n_authors, na.rm = TRUE)
+          )
+        )
   
   # raw counts
   counts = summarise(group_by(data, legislature, t = t %/% 30, q_authors),
                      n = length(t))
-  
+                     
   v = rev(brewer.pal(length(levels(counts$q_authors)), "RdYlBu"))
   l = c("1", "2", "3-5", "6-10", "11-25", "26-50", "51-100", "101-250", "251-500", "> 500")
   g = qplot(data = counts, x = t, y = n, fill = factor(q_authors), 
@@ -78,10 +85,10 @@ plot_data <- function(x, type = "all", verbose = TRUE) {
         strip.text = element_text(size = 16, face = "plain")
     )
   
-  ggsave(paste0("plots/",
+  ggsave(paste0("plots/counts/", ifelse(nchar(x) < 3, "full_", ""),
                 ifelse(type != "all", paste0(substr(type, 1, 2), "_"), ""),
          x, ".pdf"), g, width = 12, height = 11)
-  
+
 }
 
 #' Plot a weighted cosponsorship network
