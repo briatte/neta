@@ -80,12 +80,12 @@ get_ERGMM <- function(ch, sessions = 8:14) {
 #' Draw a circle in ggplot2
 #'
 #' @source \url{http://stackoverflow.com/a/6863490/635806}
-circle <- function(center = c(0, 0),diameter = 1, npoints = 100) {
+circle <- function(center = c(0, 0), diameter = 1, npoints = 100) {
   r = diameter / 2
-  tt <- seq(0,2*pi,length.out = npoints)
-  xx <- center[1] + r * cos(tt)
-  yy <- center[2] + r * sin(tt)
-  return(data.frame(x = xx, y = yy))
+  t = seq(0, 2 * pi, length.out = npoints)
+  x = center[1] + r * cos(t)
+  y = center[2] + r * sin(t)
+  return(data.frame(x = x, y = y))
 }
 
 #' Plot latent space conditional posterior means, traceplots and iterations
@@ -94,7 +94,7 @@ circle <- function(center = c(0, 0),diameter = 1, npoints = 100) {
 #' (version 2.5.1, 2014-02-17) by Pavel N. Krivitsky, Mark S. Handcock, 
 #' Susan M. Shortreed, Jeremy Tantrum and Peter D. Hoff
 plot_ERGMM <- function(file = "(an|se)[0-9]+", update = FALSE,
-                       palette = brewer.pal(8, "Set3")) {
+                       palette = RColorBrewer::brewer.pal(8, "Set3")) {
 
   stopifnot(all(grepl("^(an|se)", file)))
 
@@ -115,78 +115,67 @@ plot_ERGMM <- function(file = "(an|se)[0-9]+", update = FALSE,
     p = gsub(".rda", "_ergmm.pdf", plots)
     if(!file.exists(p) | update) {
 
+      G  = ERGMM[["model"]][["G"]]
       Yg = ERGMM[["model"]][["Yg"]]
       n = network.size(Yg)
-      G  = ERGMM[["model"]][["G"]]
-
+  
       cat("Plotting:", n, "nodes", G, "groups...")
-
-      summ <- summary(ERGMM, point.est = "pmean")
-      Z.pos  <- summ[["pmean"]][["Z"]]
-      summ   <- summ[["pmean"]]
-      Z.mean <- summ[["Z.mean"]]
-      Z.var  <- summ[["Z.var"]]
-      Z.K    <- summ[["Z.K"]]
-
-      # color by cluster membership
-    
-      if(is.latent.cluster(ERGMM)) {
-        vertex.col <- palette[ Z.K ]
-      } else {
-        vertex.col <- palette[1]
-      }
+      s = summary(ERGMM, point.est = "pmean")
   
-      vertex.col <- rep(vertex.col, length.out = n)
-
-      # size by receiver random effects
-
-      vertex.cex = 1
+      # placement
+      Z = s[["pmean"]][["Z"]]
+      Yg %v% "lon" = Z[, 1]
+      Yg %v% "lat" = Z[, 2]
+  
+      # conditional means
+      s      = s[["pmean"]]
+      Z.mean = s[["Z.mean"]]
+      Z.var  = s[["Z.var"]]
+      Z.K    = s[["Z.K"]]
+  
+      # size nodes by quartiles of receiver random effects
       if(ERGMM[["model"]][ "receiver" ][[1]]) {
-        rand.eff.mul =  exp( summ[ "receiver" ][[1]] )
-        rand.eff.mul = sqrt( rand.eff.mul )
-        vertex.cex = vertex.cex * rand.eff.mul
+        q = s[ "receiver" ][[1]]
+        q = cut(q, quantile(q), include.lowest = TRUE)
+        q = as.numeric(q) - 1
       }
-  
-      vertex.cex = rep(vertex.cex, length.out = n)
-  
-      # zoom region
-      Yg %v% "lon" = Z.pos[, 1]
-      Yg %v% "lat" = Z.pos[, 2]
 
-      # table of node memberships
-    
-      k = as.numeric(factor(vertex.col))
-      t = table(Yg %v% "party", k)
-      t = cbind(t, togetherness = round(100 * apply(t, 1, max) / rowSums(t), 1))
-
-      write.csv(t, file = gsub("ergmm/", "", gsub(".pdf", ".csv", p)), row.names = TRUE)
-    
       # plot conditional posterior means
-    
       mu = lapply(1:nrow(Z.mean), function(x) { 
-        return(data.frame(k = x, circle(Z.mean[x, ], diameter = Z.var[x])))
+        return(data.frame(K = x, circle(Z.mean[x, ], diameter = Z.var[x])))
       })
       mu = rbind.fill(mu)
-    
-      g = ggnet(Yg, mode = "geo", size = 0, geo.outliers = FALSE, arrow.size = 1/3) +
-        geom_point(aes(size = 3 + vertex.cex, color = Yg %v% "party"), alpha = .75) +
-        geom_text(aes(size = vertex.cex * .5, label = factor(k)), color = "white", alpha = .75) +
-        geom_path(data = mu, aes(group = k, x = x, y = y), alpha = 1) +
-        scale_fill_brewer(expression(Z[K]), palette = "Set3") +
-        scale_color_manual("", values = Yg %n% "party_colors") +
-        scale_size_area(max_size = 9) + 
-        guides(size = FALSE, fill = FALSE,
-               color  = guide_legend(override.aes = list(size = 6))) + 
-        labs(y = expression(Z[2]), x = expression(Z[1])) +
-        coord_equal()
   
-      ggsave(p, g, width = 9, height = 9)
+      g = ggnet(Yg, mode = "geo", size = 0, geo.outliers = FALSE, arrow.size = 1/2) +
+        geom_point(aes(size = 9 + 3 * q, color = Yg %v% "party"), alpha = .5) +
+        geom_point(aes(size = 9, color = Yg %v% "party"), alpha = 1) +
+        geom_text(aes(size = 3, label = Z.K), color = "white", alpha = .5, fontface = "bold") +
+        geom_path(data = mu, aes(group = factor(K), x = x, y = y), alpha = 2/3) +
+        scale_color_manual("", values = Yg %n% "party_colors", breaks = Yg %n% "party_order") +
+        scale_size_area(max_size = 12) + 
+        guides(size = FALSE, 
+               color  = guide_legend(override.aes = list(alpha = .5, size = 6))) + 
+        theme(text = element_text(size = 28),
+              legend.key = element_rect(colour = "white", fill = NA),
+              legend.key.size = unit(28, "pt"),
+              plot.margin = rep(unit(0, "mm"), 4)) +
+        coord_equal()
+        # labs(y = expression(Z[2]), x = expression(Z[1])) +
+
+      ggsave(p, g, width = 11, height = 9)
       cat("done.\n")
 
+      # table of node memberships
+      t = table(Yg %v% "party", Z.K)
+      t = cbind(t, togetherness = round(100 * apply(t, 1, max) / rowSums(t), 1))
+
+      write.csv(t, row.names = TRUE,
+                file = gsub("ergmm/", "", gsub(".pdf", ".csv", p)))
+
     }
-  
+
     # traceplot (to models folder)
-  
+
     p = gsub(".rda", "_trace.pdf", i)
     if(!file.exists(p) | update) {
   
