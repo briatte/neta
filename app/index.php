@@ -137,10 +137,11 @@
       </label>
       <br>
       Download&nbsp;&nbsp;<i class="fa fa-file-o"></i>&nbsp;&nbsp;<a href="<?php echo $ch . $page; ?>.gexf" title="Download this graph (GEXF, readable with Gephi)">network</a>&nbsp;&nbsp;<i class="fa fa-files-o"></i>&nbsp;&nbsp;<a href="<?php echo $ch; ?>.zip" title="Download all <?php echo $chamber; ?> graphs (GEXF, readable with Gephi)">full series</a></p>
-    <p><a href="#" id="recenter-camera" class="button">reset zoom</a>&nbsp;&nbsp;<a href="#" id="toggle-layout" class="button">Animate</a> <small><a href="https://gephi.org/2011/forceatlas2-the-new-version-of-our-home-brew-layout/" title="Details on the Force Atlas 2 algorithm."><i class="fa fa-info-circle"></i></a></small></p>
+    <p><a href="#" id="recenter-camera" class="button" title="Reset graph to initial zoom position.">reset zoom</a>&nbsp;&nbsp;<a href="#" id="toggle-layout" class="button" title="Animate with Force Atlas 2.">Animate</a> <small><a href="https://gephi.org/2011/forceatlas2-the-new-version-of-our-home-brew-layout/" title="Details on the Force Atlas 2 algorithm."><i class="fa fa-info-circle"></i></a></small></p>
     <footer>
-      <p>Inspired by <a href="http://coulmont.com/blog/2011/09/02/travail-de-deputes/">Baptiste&nbsp;Coulmont</a> and <a href="http://jhfowler.ucsd.edu/cosponsorship.htm">James&nbsp;Fowler</a>, built with <a href="http://gexf.net/format/" title="GEXF file format (Gephi)">GEXF</a>, <a href="http://www.r-project.org/" title="The R Project for Statistical Computing">R</a> and <a href="http://sigmajs.org/" title"JavaScript library dedicated to graph drawing">sigma.js</a>. See <a href="https://github.com/briatte/neta/">this repo</a> for the code and data. 
-      Background photo from <?php if($ch == "an") echo "<a href='http://commons.wikimedia.org/wiki/File:Panorama_de_l%27h%C3%A9micyle_de_l%27assembl%C3%A9e_nationale.jpg' title='Original photograph by Richard Ying and Tangui Morlier'>"; else echo "<a href='https://commons.wikimedia.org/wiki/File:L%27h%C3%A9micycle_du_S%C3%A9nat_fran%C3%A7ais_en_septembre_2009.jpg' title='Original photograph by Romain Vincens'>"; ?>Wikimedia</a>.</p>
+      <p>Inspired by <a href="http://coulmont.com/blog/2011/09/02/travail-de-deputes/">Baptiste&nbsp;Coulmont</a> and <a href="http://jhfowler.ucsd.edu/cosponsorship.htm">James&nbsp;Fowler</a>, built with <a href="http://gexf.net/format/" title="GEXF file format (Gephi)">GEXF</a>, <a href="http://www.r-project.org/" title="The R Project for Statistical Computing">R</a> and <a href="http://sigmajs.org/" title"JavaScript library dedicated to graph drawing">sigma.js</a>. 
+      Background photo by <?php if($ch == "an") echo "<a href='http://commons.wikimedia.org/wiki/File:Panorama_de_l%27h%C3%A9micyle_de_l%27assembl%C3%A9e_nationale.jpg' title='Original photograph by Richard Ying and Tangui Morlier'>Richard Ying and Tangui Morlier"; else echo "<a href='https://commons.wikimedia.org/wiki/File:L%27h%C3%A9micycle_du_S%C3%A9nat_fran%C3%A7ais_en_septembre_2009.jpg' title='Original photograph by Romain Vincens'>Romain Vincens"; ?></a> (Wikimedia).</p>
+        <p><a href="http://twitter.com/share?text=Cosponsorship%20networks%20in%20the%20French%20Parliament,%20by%20@phnk:&amp;url=<?php echo 'http://' . $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"]; ?>" class="button" title="Share this page on Twitter."><i class="fa fa-twitter"></i> Tweet</a>&nbsp;&nbsp;<a href="https://github.com/briatte/neta" class="button" title="Get the code and data from GitHub."><i class="fa fa-github"></i> Code</a></p>
     </footer>
     <div id="graph-container"></div>
   </div>
@@ -205,7 +206,7 @@ sigma.parsers.gexf(
     container: 'sigma-container'
   },
   function(s) {
-
+      
     // We first need to save the original colors of our
     // nodes and edges, like this:
     s.graph.nodes().forEach(function(n) {
@@ -215,6 +216,7 @@ sigma.parsers.gexf(
     });
     s.graph.edges().forEach(function(e) {
       e.originalColor = e.color;
+      e.type = 'arrow';
     });
 
     // When a node is clicked, we check for each node
@@ -253,23 +255,24 @@ sigma.parsers.gexf(
         mandats = "third"
       else
         mandats = mandats + 'th';
-      
-      // hack alpha value
-      //
+
+      // node color
       var rgba = e.data.node.color;
+
+      // hack alpha value
       // rgba = rgba.replace('0.3)', '1)')
-        
+
       // explicit party groups
       //
       group = e.data.node.attributes['party'];
       party = "?";
-      if(group == "CEN") party = "Centrists/rightwing";
-      if(group == "COM") party = "Communists/far-left";
-      if(group == "SOC") party = "Socialists/leftwing";
+      if(group == "CEN") party = "Centrists";
+      if(group == "COM") party = "Communists";
+      if(group == "SOC") party = "Socialists";
       if(group == "DRO") party = "rightwing";
-      if(group == "FN") party = "Front National/far-right";
-      if(group == "RAD") party = "Radicals/leftwing";
-      if(group == "ECO") party = "Greens/leftwing";
+      if(group == "FN") party = "Front National";
+      if(group == "RAD") party = "Radicals";
+      if(group == "ECO") party = "Greens";
       if(group == "SE") party = "unaffiliated";
       
       profile = "<a href='" + e.data.node.attributes['url'] + "' title='Go to profile (<?php echo $chamber; ?>, new window)' target='_blank'>"
@@ -302,20 +305,14 @@ sigma.parsers.gexf(
       document.getElementById('caption').innerHTML = '<?php echo $caption; ?>';
     });
     
-    // console.log('weighting edges');
-    // s.graph.edges().forEach(function(e){
-    //   e.size = e.inv;
-    // });
-    
     s.settings({
-      // edgeColor: 'default',
-      // defaultEdgeColor: '#555',
+      defaultEdgeColor: '#555',
+      edgeColor: 'source',
       minNodeSize: 2,
       maxNodeSize: 6,
       defaultLabelColor: '#fff',
       defaultLabelSize: 18,
       font: "source sans pro",
-      // zoomMin = .3,
       minEdgeSize: .1,
       maxEdgeSize: .1,
       labelHoverBGColor: 'node',
@@ -364,13 +361,13 @@ sigma.parsers.gexf(
     function(e){
       if (e.target.checked) {
         s.graph.edges().forEach(function(e) {
-          if(e.weight > 0.5)
-            e.color = e.originalColor;
+          if(e.weight > .5)
+            e.size = 1;
           else
-            e.color = '#333';
+            e.size = 0;
         });
         s.settings({
-          minEdgeSize: 1,
+          minEdgeSize: .1,
           maxEdgeSize: 1
         });
       } else {
