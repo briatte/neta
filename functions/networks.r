@@ -279,8 +279,6 @@ weighted_edges <- function(edges,
 
 #' Compute weighted network measures
 #' 
-#' - Node centrality computed with \code{\link{tnet}}
-#' - Party modularity computed with \code{\link{igraph}}
 weighted_nodes <- function(net, weights = "weight", verbose = TRUE) {
   
   tnet = as.tnet(as.sociomatrix(net), type = "weighted one-mode tnet")
@@ -364,7 +362,7 @@ weighted_nodes <- function(net, weights = "weight", verbose = TRUE) {
 #' @author Tore Opsahl
 #' @source \url{http://toreopsahl.com/2010/04/21/article-node-centrality-in-weighted-networks-generalizing-degree-and-shortest-paths/}
 weighted_degree <- function(x = dir("data", pattern = "(am|bi)_(an|se)[0-9]+"),
-                            folder = "rankings") {
+                            folder = "models/degree") {
   
   for(i in x) {
     
@@ -511,6 +509,90 @@ weighted_gexf <- function(file = c("an", "se"), sessions = 8:14,
 
   }
   
+}
+
+network_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
+
+  file = paste0("models/modularity/", ch, x, ".rda")
+  chamber = ifelse(ch == "an", "Assemblée nationale", "Sénat")
+
+  data = paste0("data/", ch, x, ".rda")
+  if(file.exists(data))
+    load(data)
+  else
+    load(paste0("data/bi_", ch, x, ".rda"))
+
+  if(!file.exists(file) | update) {
+  
+    message(paste("Modeling", chamber, "legislature", x))
+
+    tnet = as.tnet(as.sociomatrix(net), type = "weighted one-mode tnet")
+
+    # Gross, Kirkland and Shalizi 2012
+    if(weights == "wpc") {
+      wpc = table(tnet[, 1])[ as.character(tnet[, 1]) ]
+      tnet = cbind(tnet[, 1:2], w = tnet[, 3] / wpc)
+    }
+
+    # symmetrise for undirected algorithms 
+    tnet = symmetrise_w(tnet, method = "AMEAN") # answers warning above
+
+    # rename vertices
+    tnet = data.frame(
+      i = network.vertex.names(net)[ tnet[, 1] ],
+      j = network.vertex.names(net)[ tnet[, 2] ],
+      w = tnet[, 3]
+      )
+
+    # convert to igraph
+    inet = graph.edgelist(as.matrix(tnet[, 1:2]), directed = FALSE)
+    E(inet)$weight = tnet[, 3]
+
+    # V(inet)$name = V(inet)$nom ## if merging to nodes
+
+    # maximized Walktrap (Waugh et al. 2009, arXiv:0907.3509, Section 2.3)
+    walktrap = lapply(1:50, function(x) walktrap.community(inet, steps = x))
+
+    # max. partition
+    maxwalks = order(sapply(walktrap, modularity), decreasing = TRUE)[1]
+    walktrap = walktrap[[ maxwalks ]]
+
+    message(paste("Maximized to", n_distinct(walktrap[[ "membership" ]]), "groups (Walktrap,", maxwalks, "steps out of 50)"))
+
+    # multilevel Louvain (Blondel et al. 2008, arXiv:0803.0476)
+    louvain = multilevel.community(inet)
+
+    message(paste("Maximized to", n_distinct(louvain[[ "membership" ]]), "groups (Louvain)"))
+
+    save(inet, walktrap, louvain, file = file)
+
+  } else {
+  
+    load(file)
+
+  }
+
+  return(data.frame(chamber,
+                    Legislature = x,
+                    # unweighted graph-level
+                    Vertices = network.size(net),
+                    Edges = network.edgecount(net),
+                    Density = net %n% "density",
+                    # weighted graph-level
+                    Centralization = net %n% "degree",
+                    Distance = net %n% "distance",
+                    Clustering = net %n% "clustering",
+                    # maximized modularity
+                    Modularity = net %n% "modularity",
+                    Walktrap = modularity(walktrap),
+                    Louvain = modularity(louvain),
+                    # node-level measures
+                    Betweenness = mean(net %v% "betweenness", na.rm = TRUE),
+                    Closeness = mean(net %v% "closeness", na.rm = TRUE),
+                    Constraint = mean(net %v% "constraint", na.rm = TRUE),
+                    stringsAsFactors = FALSE)
+        )
+
 }
 
 # have a nice day

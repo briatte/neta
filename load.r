@@ -21,24 +21,20 @@ packages = lapply(packages, function(x) {
 
 # folders
 folders = c("amendements", "dossiers", "indexes")
-folders = c("app", "data", "plots", "rankings",
-            paste0("models/",
-                   c("ergm", "ergmm")
-                   ),
+folders = c("app", "data", "plots", "raw", "models",
+            paste0("models/", c("degree", "modularity", "ergm", "ergmm")),
             paste0("raw/",
-                   c("an", "se")
-                   ),
-            paste0("raw/", 
                    c(
-                     paste0("an/", c(folders, "deputes")),
-                     paste0("se/", c(folders, "senateur")))
+                     "an", paste0("an/", c(folders, "deputes")),
+                     "se", paste0("se/", c(folders, "senateur"))
+                     )
                    )
             )
 
 # create if absent
 folders = lapply(folders, function(x) { if(!file.exists(x)) dir.create(x) })
 
-# load ggnet dev
+# dev ggnet code
 if(!exists("ggnet")) {
   download("https://raw.githubusercontent.com/briatte/ggnet/master/ggnet.R",
            "functions/ggnet.r", mode = "wb", quiet = TRUE)

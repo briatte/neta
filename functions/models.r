@@ -169,8 +169,7 @@ plot_ERGMM <- function(file = "(an|se)[0-9]+", update = FALSE,
       t = table(Yg %v% "party", Z.K)
       t = cbind(t, togetherness = round(100 * apply(t, 1, max) / rowSums(t), 1))
 
-      write.csv(t, row.names = TRUE,
-                file = gsub("ergmm/", "", gsub(".pdf", ".csv", p)))
+      write.csv(t, row.names = TRUE, file = gsub(".rda", ".csv", i))
 
     }
 
@@ -370,7 +369,7 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), verbose = TRUE, up
     if(verbose)
       print(g)
 
-    ggsave(paste0("models/ergm_beta_", cutoff[1], "_", cutoff[2], ".pdf"),
+    ggsave(paste0("models/ergm/ergm_beta_", cutoff[1], "_", cutoff[2], ".pdf"),
            g, width = 9, height = 9)
   
     # differential homophily
@@ -391,7 +390,7 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), verbose = TRUE, up
     if(verbose)
       print(g)
 
-    ggsave(paste0("models/ergm_diff_", cutoff[1], "_", cutoff[2], ".pdf"),
+    ggsave(paste0("models/ergm/ergm_diff_", cutoff[1], "_", cutoff[2], ".pdf"),
            g, width = 9, height = 9)
     
   }

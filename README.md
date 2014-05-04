@@ -5,14 +5,16 @@
 
 > See an [interactive visualization](http://briatte.org/sigma/) of the results, or read the draft documentation:
 
-* [replication notes](HOWTO.md)
-* [data codebook](data/README.md)
-* [model specifications](data/README.md)
+* [replication instructions](HOWTO.md)
+* [data codebooks](data/README.md)
+* [model specifications](models/README.md)
+* [conference slides][lawfactory2014]
 
 <!-- 
 
-* [conference slides][lawfactory2014]
-* [working paper](paper) 
+* [working paper][paper]
+
+[paper]: /
 
 -->
 

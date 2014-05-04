@@ -41,7 +41,7 @@ One way to get the databases if you have a TeX distribution installed is to knit
 The few functions that are not run in [`make.r`][makefile] can be run separately, such as `weighted_degree` to export centrality rankings at different values of the node weighting parameter, using code from [Tore Opsahl][to]:
 
 ```{S}
-weighted_degree('rankings')
+weighted_degree('models/degree')
 ```
 
 [jf]: http://jhfowler.ucsd.edu/cosponsorship.htm
@@ -51,6 +51,6 @@ The `get_ameli2` scraper function can also try to reconstitute the `Ameli` data 
 
 * * *
 
-See the `README` files of the [`app`](https://github.com/briatte/neta/blob/master/app/README.md) and [`data`](https://github.com/briatte/neta/blob/master/data/README.md) folders for additional details. The code also contains some internal documentation.
+See the `README` files of each folder for additional details. The code also contains some internal documentation.
 
 [makefile]: https://github.com/briatte/neta/blob/master/make.r
