@@ -39,7 +39,7 @@ get_ERGMM <- function(ch, sessions = 8:14) {
   N = N [ N %in% sessions ]
 
   chamber = ifelse(ch == "an", "Assemblée nationale", "Sénat")
-  message(paste("Parsing:", chamber, length(N), "legislatures"))
+  msg("Parsing:", chamber, length(N), "legislatures")
 
   for(i in N) {
 
@@ -55,7 +55,7 @@ get_ERGMM <- function(ch, sessions = 8:14) {
       # ignore small-n and 'SE'
       g = length(t[ t > 5 & names(t) != "SE" ])
 
-      message(paste("Modeling:", title, g, "groups"))
+      msg("Modeling:", title, g, "groups")
 
       # be patient for a few days
       ERGMM = ergmm(net ~ euclidean(d = 2, G = g) + rreceiver,
@@ -105,7 +105,7 @@ plot_ERGMM <- function(file = "(an|se)[0-9]+", update = FALSE,
 
     chamber = ifelse(grepl("/an", i), "Assemblée nationale", "Sénat")
     title = paste(chamber, "legislature", gsub("\\D", "", i))
-    message(paste("Plotting:", title))
+    msg("Plotting:", title)
 
     load(i)
     plots = gsub("^models/ergmm", "plots", i)
@@ -251,7 +251,7 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), verbose = TRUE, up
         if(!file.exists(m)) {
         
           sink(gsub(".rda", ".log", m))
-          message(paste("Modeling:", title, "cutoffs at", cutoff[1], "and", cutoff[2]))
+          msg("Modeling:", title, "cutoffs at", cutoff[1], "and", cutoff[2])
         
           data = paste0("data/", file, ".rda")
           if(!file.exists(data))

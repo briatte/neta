@@ -525,7 +525,7 @@ net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
 
   if(!file.exists(file) | update) {
   
-    message(paste("Modeling", chamber, "legislature", x))
+    msg("Modeling", chamber, "legislature", x)
 
     tnet = as.tnet(as.sociomatrix(net), type = "weighted one-mode tnet")
 
@@ -558,12 +558,12 @@ net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
     maxwalks = order(sapply(walktrap, modularity), decreasing = TRUE)[1]
     walktrap = walktrap[[ maxwalks ]]
 
-    message(paste("Maximized to", n_distinct(walktrap[[ "membership" ]]), "groups (Walktrap,", maxwalks, "steps out of 50)"))
+    msg("Maximized to", n_distinct(walktrap[[ "membership" ]]), "groups (Walktrap,", maxwalks, "steps out of 50)")
 
     # multilevel Louvain (Blondel et al. 2008, arXiv:0803.0476)
     louvain = multilevel.community(inet)
 
-    message(paste("Maximized to", n_distinct(louvain[[ "membership" ]]), "groups (Louvain)"))
+    msg("Maximized to", n_distinct(louvain[[ "membership" ]]), "groups (Louvain)")
 
     save(inet, walktrap, louvain, file = file)
 

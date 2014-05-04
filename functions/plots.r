@@ -268,7 +268,7 @@ plot_egos <- function(x, update = FALSE, which = NULL, root = "paper/figures/") 
       k = k [ names(k) %in% unique(n %v% "party") ]
       n %n% "colors" = k
 
-      message(paste(x, network.size(n), "nodes"))
+      msg(x, network.size(n), "nodes")
 
       g = ggnet(n, mode = "kamadakawai", node.group = n %v% "party", node.color = n %n% "colors",
                 size = 6, segment.color = "grey75", segment.alpha = .5, ...) +
