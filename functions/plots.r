@@ -450,8 +450,8 @@ plot_groups <- function(sessions = 8:14) {
 #' @keywords paper
 plot_attributes <- function(sessions = 8:14) {
   
-  se = rbind.fill(lapply(sessions, network_modularity, ch = "se"))
-  an = rbind.fill(lapply(sessions, network_modularity, ch = "an"))
+  se = rbind.fill(lapply(sessions, net_modularity, ch = "se"))
+  an = rbind.fill(lapply(sessions, net_modularity, ch = "an"))
   da = melt(rbind(an, se), c("chamber", "Legislature"))
 
   # mark amendments series

@@ -41,7 +41,7 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = TRUE, export = F
       co = table(edges$name[ edges$status == "cosponsor" ])
       
       # weighted edges
-      net = weighted_edges(edges, verbose = verbose)
+      net = get_edges(edges, verbose = verbose)
       edges = net[["edges"]]
       net = net[["network"]]
       
@@ -136,7 +136,7 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = TRUE, export = F
       net %n% "party_order" = names(colors) [ colors %in% network::get.network.attribute(net, "party_colors") ]
       
       # sponsor details
-      net = weighted_nodes(net, weights = "wpc", verbose = verbose)
+      net = get_nodes(net, weights = "wpc", verbose = verbose)
       attrs = c("uid", "nom", "nom_de_famille", "sexe", "annee_naissance",
                 "party", "nom_circo", "lon", "lat",
                 "mandat", "nb_mandats", "reelected",
@@ -209,18 +209,16 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = TRUE, export = F
     msg("Saved:", data, file_size(data))
   
   if(export)
-    weighted_gexf(file)
+    net_gexf(file)
   
 }
 
-#' Create a weighted directed edge list from first authors to all other sponsors
+#' Create a weighted directed edge list from first authors to cosponsors
 #' 
 #' The resulting network is weighted by inverse quantity of cosponsors per bill
 #' (used by Newman for scientific coauthorships and by Fowler for Congressional
-#' cosponsorships). To normalize Newman-Fowler weigts as in Gross, Shalizi and 
-#' Kirkland (weighted propensity to cosponsor), divide them by the number of 
-#' bills per author and rebuild the networks.
-weighted_edges <- function(edges,
+#' cosponsorships).
+get_edges <- function(edges,
                            uid = "uid", name = "name",
                            verbose = TRUE) {
   
@@ -277,9 +275,12 @@ weighted_edges <- function(edges,
   
 }
 
-#' Compute weighted network measures
+#' Compute weighted propensity to cosponsor and weighted network measures
 #' 
-weighted_nodes <- function(net, weights = "weight", verbose = TRUE) {
+#' Divides Newman-Fowler weights by the number of bills per author (Gross, 
+#' Shalizi and Kirkland 2012). The resulting weight distributions are roughly
+#' log-normal in most networks.
+get_nodes <- function(net, weights = "weight", verbose = TRUE) {
   
   tnet = as.tnet(as.sociomatrix(net), type = "weighted one-mode tnet")
   
@@ -361,7 +362,7 @@ weighted_nodes <- function(net, weights = "weight", verbose = TRUE) {
 #' by default.
 #' @author Tore Opsahl
 #' @source \url{http://toreopsahl.com/2010/04/21/article-node-centrality-in-weighted-networks-generalizing-degree-and-shortest-paths/}
-weighted_degree <- function(x = dir("data", pattern = "(am|bi)_(an|se)[0-9]+"),
+net_degree <- function(x = dir("data", pattern = "(am|bi)_(an|se)[0-9]+"),
                             folder = "models/degree") {
   
   for(i in x) {
@@ -412,7 +413,7 @@ weighted_degree <- function(x = dir("data", pattern = "(am|bi)_(an|se)[0-9]+"),
 #' Export GEXF network objects
 #'
 #' Presets to export a GEXF object.
-weighted_gexf <- function(file = c("an", "se"), sessions = 8:14,
+net_gexf <- function(file = c("an", "se"), sessions = 8:14,
                           mode = "kamadakawai", nodes = "degree", ties = "weight",
                           entropize = function(x, n) {
                             by = diff(range(x, na.rm = TRUE)) / 20
@@ -511,7 +512,7 @@ weighted_gexf <- function(file = c("an", "se"), sessions = 8:14,
   
 }
 
-network_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
+net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
 
   file = paste0("models/modularity/", ch, x, ".rda")
   chamber = ifelse(ch == "an", "Assemblée nationale", "Sénat")
