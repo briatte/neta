@@ -1,3 +1,8 @@
+#' Grid alignment for plots
+#' 
+#' @source \url{http://stackoverflow.com/a/9491019/635806}
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
 #' Plot raw counts of amendments and bills
 #' 
 #' Colored from blue to red.
@@ -448,10 +453,11 @@ plot_groups <- function(sessions = 8:14) {
 #' Plot network statistics and node attributes
 #'
 #' @keywords paper
-plot_attributes <- function(sessions = 8:14) {
+plot_attributes <- function(type = "all", sessions = 8:14) {
   
-  se = rbind.fill(lapply(sessions, net_modularity, ch = "se"))
-  an = rbind.fill(lapply(sessions, net_modularity, ch = "an"))
+  type = ifelse(type == "all", "", paste0(type, "_"))
+  se = rbind.fill(lapply(sessions, net_modularity, ch = paste0(type, "se")))
+  an = rbind.fill(lapply(sessions, net_modularity, ch = paste0(type, "an")))
   da = melt(rbind(an, se), c("chamber", "Legislature"))
 
   # mark amendments series
@@ -460,8 +466,6 @@ plot_attributes <- function(sessions = 8:14) {
 
   g = qplot(data = da, x = Legislature, y = value,
             color = chamber, geom = "line") +
-    geom_point(data = dots_an) +
-    geom_point(data = dots_se) +
     scale_x_continuous(breaks = sessions) +
     scale_colour_brewer("", palette = "Set2") +
     facet_wrap(~ variable, ncol = 3, scales = "free_y") +
@@ -469,35 +473,15 @@ plot_attributes <- function(sessions = 8:14) {
     theme_grey(16) +
     theme(legend.position = "bottom", panel.grid = element_blank())
 
-  ggsave("paper/figures/network_measures.pdf", g, width = 9, height = 9)
+  if(type != "bi")
+    g = g +
+      geom_point(data = dots_an) +
+      geom_point(data = dots_se)
+
+  type = ifelse(type == "", "full", gsub("_", "", type))
+  ggsave(paste0("plots/measures/", type, ".pdf"),
+         g, width = 9, height = 9)
 
 }
-
-#' Grid alignment for plots
-#' 
-#' @source \url{http://stackoverflow.com/a/9491019/635806}
-vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
-
-#' Black and white theme, large text
-#'
-#' @keywords paper
-theme_neta <- theme_minimal(16) + 
-  theme(
-    panel.border = element_rect(fill = NA, color = "white"),
-    panel.grid.major.x = element_line(color = "white"),
-    panel.grid.minor.x = element_line(color = "white"),
-    plot.margin = unit(c(1, 1, 1, 1), "cm"),
-    plot.title = element_text(face = "bold", vjust = 1),
-    axis.title.y = element_text(angle = 90, vjust = -.25),
-    axis.title.x = element_text(vjust = -1),
-    legend.key = element_rect(color = "white"),
-    legend.key.size = unit(16, "pt"), 
-    legend.position = "bottom", 
-    legend.margin = unit(32, "pt"),
-    legend.title = element_text(size = 16, face = "bold"),
-    legend.text = element_text(size = 16, face = "plain"),
-    strip.background = element_rect(fill = NA, color = "white"),
-    strip.text = element_text(size = 16, face = "plain")
-)
 
 # have a nice day

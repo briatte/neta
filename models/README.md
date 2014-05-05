@@ -1,18 +1,6 @@
-# SPECS
+## `ergmm`
 
-Memo to self on network specs.
-
-## DEGREE
-
-The `degree` folder contains sensitivity tests for the alpha weighting parameter ([Opsahl 2010](http://toreopsahl.com/2010/04/21/article-node-centrality-in-weighted-networks-generalizing-degree-and-shortest-paths/)) used in the weighted one-mode network construction. Tables are included for all data series at values of alpha 0, 0.5, 1 and 1.5.
-
-## MODULARITY
-
-The `modularity` folder contains maximizations of party-based modularity ([Waugh _et al._ 2012](http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1437055)) computed from the Louvain ([Blondel _et al._ 2008](http://arxiv.org/abs/0803.0476)) and Walktrap ([Pons and Latapy 2005](http://arxiv.org/abs/physics/0512106)) algorithms. Walktrap was maximized over random steps 1-50, as in [Waugh _et al._ 2009](http://arxiv.org/abs/0907.3509), Section 2.3.
-
-## ERGMM
-
-The `ergmm` folder contains the results of a two-dimensional latent space model, using counts of ties in the full networks. The model identifies as many groups `G` as there are party groups in the legislature under examination, includes a random receiver effect, and is referenced against a Poisson distribution to account for overdispersion in the dependent variable.
+Two-dimensional latent space models, using counts of ties in the full networks as the dependent variable. The model is set to identify as many groups `G` as there are party groups in the legislature under examination, includes a random receiver effect, and is referenced against a Poisson distribution to account for overdispersion.
 
 The `latentnet` ([Krivitsky and Handcock 2008](http://www.jstatsoft.org/v24/i05)) specification is
 
@@ -26,9 +14,9 @@ ergmm(net ~ euclidean(d = 2, G = g) + rreceiver,
 
 The model takes a few days to converge on all series, and does so unequally well on each legislature (see e.g. legislature 10 of the National Assembly).
 
-## ERGM
+## `ergm`
 
-The `ergm` folder contains the results of exponential random graph models that look for fixed differential homophily effects in the cosponsorship networks of each legislature. Estimates are provided only for major parliamentary groups where the sample size is sufficient to correctly estimate standard errors and avoid further model degeneracy due to infinite coefficients.
+Exponential random graph models that look at fixed differential homophily effects in the cosponsorship networks of each legislature. Estimates are provided only for major parliamentary groups where the sample size is sufficient to correctly estimate standard errors and avoid further model degeneracy due to infinite coefficients.
 
 The `ergm` ([Morris, Handock and Hunter 2008](http://www.jstatsoft.org/v24/i04)) specification is
 

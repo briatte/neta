@@ -2,7 +2,7 @@
 #'
 #' @param plot export plot of counts (on by default)
 #' @param export export GEXF file (on by default; will ignore non-merged series)
-get_networks <- function(sessions, file, verbose = TRUE, plot = TRUE, export = FALSE) {
+get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = FALSE) {
   
   file = gsub(".rda", "", file)
 
@@ -111,23 +111,23 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = TRUE, export = F
       nodes$n_co = co[ rownames(nodes) ]
       nodes$n_co[ is.na(nodes$n_co) ] = 0
       
-      # weighted propensity to cosponsor (Gross and Shalizi)
+      # weighted propensity to cosponsor (Gross, Kirkland and Shalizi 2012)
       wpc = net %e% "weight" / nodes$n_au[ net %e% "source" ]
       network::set.edge.attribute(net, "wpc", as.vector(wpc))
 
       # party affiliation
       net %v% "party" = as.character(nodes$party)
             
-      # add colors
+      # add colors to Left-Right party groups
       colors = c(
-        "COM" = "#E41A1C", # Communists (leftwing, red)
-        "ECO" = "#4DAF4A", # Greens (leftwing, green)
-        "RAD" = "#FFFF33", # Radicals (leftwing, yellow)
-        "SOC" = "#F781BF", # Socialists (or Leftwing coalition, pink)
-        "SE" = "#999999",  # Unaffiliated/Unknown (grey)
-        "CEN" = "#FF7F00", # Centrists (RI, UDF, UDI, NC...; rightwing, orange)
-        "DRO" = "#377EB8", # Rightwing (Gaullists, RPR + DL, UMP; blue)
-        "FN" = "#A65628"   # Front National (extreme-right, brown)
+        "COM" = "#E41A1C", # Communists and Far Left (L; red)
+        "ECO" = "#4DAF4A", # Greens (L; green)
+        "RAD" = "#FFFF33", # Radicals (L; yellow)
+        "SOC" = "#F781BF", # Socialists (or large L coalition; pink)
+        "SE" = "#999999",  # Unaffiliated/Unknown (mixed; grey)
+        "CEN" = "#FF7F00", # Centrists: RI, UDF, UDI, NC, Modem (R; orange)
+        "DRO" = "#377EB8", # Conservatives: Gaullists, RPR, DL, UMP (R; blue)
+        "FN" = "#A65628"   # Front National (extreme-right; brown)
       )
       
       net %n% "party_colors" = colors[ unique(net %v% "party") ]
@@ -207,10 +207,11 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = TRUE, export = F
   
   if(verbose)
     msg("Saved:", data, file_size(data))
-  
-  if(export)
-    net_gexf(file)
-  
+
+  # export to GEXF
+  if(nchar(file) < 3 | export)
+    get_gexf(file)       
+
 }
 
 #' Create a weighted directed edge list from first authors to cosponsors
@@ -282,16 +283,11 @@ get_edges <- function(edges,
 #' log-normal in most networks.
 get_nodes <- function(net, weights = "weight", verbose = TRUE) {
   
-  tnet = as.tnet(as.sociomatrix(net), type = "weighted one-mode tnet")
-  
-  # Gross, Kirkland and Shalizi 2012
-  if(weights == "wpc") {
-    wpc = table(tnet[, 1])[ as.character(tnet[, 1]) ]
-    tnet = cbind(tnet[, 1:2], w = tnet[, 3] / wpc)
-  }
-  
+  # weighted adjacency matrix to tnet
+  tnet = as.tnet(as.sociomatrix(net, attrname = weights), type = "weighted one-mode tnet")
+    
   # symmetrise for undirected algorithms 
-  tnet = symmetrise_w(tnet, method = "AMEAN") # answers warning above
+  tnet = symmetrise_w(tnet, method = "AMEAN")
   
   # measures dataset
   data = data.frame(name = network.vertex.names(net),
@@ -300,7 +296,7 @@ get_nodes <- function(net, weights = "weight", verbose = TRUE) {
   # generalized measures
   data = merge(data, degree_w(tnet)[, -3], alpha = 1, by = "node") # [1]
   dist = distance_w(tnet) # [2]
-  
+
   # shortest paths
   dist = data.frame(distance = rowMeans(dist, na.rm = TRUE), node = attr(dist, "nodes"))
   data = merge(data, dist, by = "node", all.x = TRUE)
@@ -337,17 +333,6 @@ get_nodes <- function(net, weights = "weight", verbose = TRUE) {
   inet = graph.edgelist(as.matrix(tnet[, 1:2]), directed = FALSE)
   E(inet)$weight = tnet[, 3]
   
-  # get MP parliamentary groups
-  party = network::get.vertex.attribute(net, "party")
-  names(party) = network.vertex.names(net)
-  
-  # subset to nonmissing groups
-  V(inet)$party = party[ V(inet)$name ]
-  inet = inet - V(inet) [ is.na(V(inet)$party) ]
-  
-  # modularity
-  net %n% "modularity" = modularity(inet, membership = factor(V(inet)$party))
-
   # Burt's constraint  
   data$constraint = constraint(inet, weights = E(inet)$weight)[ data$name ]
 
@@ -355,66 +340,11 @@ get_nodes <- function(net, weights = "weight", verbose = TRUE) {
 
 }
 
-#' Sensitivity tests
-#'
-#' Saves the table from Opsahl et al. (2010) that shows top nodes by weighted 
-#' degree at different values of the alpha parameter. Run on all available data
-#' by default.
-#' @author Tore Opsahl
-#' @source \url{http://toreopsahl.com/2010/04/21/article-node-centrality-in-weighted-networks-generalizing-degree-and-shortest-paths/}
-net_degree <- function(x = dir("data", pattern = "(am|bi)_(an|se)[0-9]+"),
-                            folder = "models/degree") {
-  
-  for(i in x) {
-    
-    load(paste0("data/", i))
-    
-    # all weighted edges should be unique
-    tnet = edges
-    stopifnot(nrow(tnet) == nrow(unique(tnet)))
-    
-    # convert nodes to numbers for tnet
-    lvl = unique(unlist(tnet[, 1:2]))
-    tnet$i = as.numeric(factor(tnet$i, levels = lvl))
-    tnet$j = as.numeric(factor(tnet$j, levels = lvl))
-    
-    # symmetrise edge list
-    tnet = suppressWarnings(as.tnet(tnet, type = "weighted one-mode tnet"))
-    tnet = symmetrise_w(tnet, method = "AMEAN") # answers warning above
-    
-    # get degree at several values of alpha
-    rank = data.frame(
-      lvl,
-      degree_w(tnet, measure = c("degree", "output", "alpha"), alpha = 0.5),
-      degree_w(tnet, measure = "alpha", alpha = 1.5)[, "alpha"],
-      stringsAsFactors = FALSE
-    )
-    names(rank) = c("name", "node", "a00", "a10", "a05", "a15")  
-
-    # merge to names and rank into columns
-    rank = data.frame(
-      1:nrow(rank),
-      rank[order( -rank[, "a00"], -rank[, "a10"]), c("name", "a00" )],
-      rank[order( -rank[, "a05"], -rank[, "a10"]), c("name", "a05" )],
-      rank[order( -rank[, "a10"], -rank[, "a10"]), c("name", "a10" )],
-      rank[order( -rank[, "a15"], -rank[, "a10"]), c("name", "a15" )]
-    )
-    names(rank) = c("rank", "a00.name", "a00", "a05.name", "a05", 
-                    "a10.name", "a10", "a15.name", "a15")
-    
-    # save full table
-    write.csv(rank, file = paste0(folder, "/", gsub(".rda", ".csv", i)),
-              row.names = FALSE)
-
-  }
-  
-}
-
 #' Export GEXF network objects
 #'
 #' Presets to export a GEXF object.
-net_gexf <- function(file = c("an", "se"), sessions = 8:14,
-                          mode = "kamadakawai", nodes = "degree", ties = "weight",
+get_gexf <- function(file = c("an", "se"), sessions = 8:14, verbose = TRUE,
+                          mode = "kamadakawai", nodes = "degree",
                           entropize = function(x, n) {
                             by = diff(range(x, na.rm = TRUE)) / 20
                             return(round(x + runif(n, min = by * -1, max = by), 2))
@@ -422,8 +352,6 @@ net_gexf <- function(file = c("an", "se"), sessions = 8:14,
   
   stopifnot(all(sessions %in% 8:14))
   stopifnot(all(file %in% c("an", "se")))
-  
-  stopifnot(ties %in% c("weight", "wpc"))
   stopifnot(nodes %in% c("degree", "distance"))
 
   file = gsub(".rda", "", file)
@@ -434,6 +362,16 @@ net_gexf <- function(file = c("an", "se"), sessions = 8:14,
     for(i in sessions) {
     
       net = get(paste0("net", i))
+
+      meta = as.character(net %n% "chamber")
+      meta = list(creator = "rgexf",
+                  description = paste(meta, "legislature", i, "; placement:", mode,
+                                      "; edge weights: Newman-Fowler; node size:", nodes),
+                  keywords = "Parlement, Parliament, France")
+      
+      if(verbose)
+        print(meta$description)
+
       people = get(paste0("nodes", i))
       people = subset(people, nom %in% network.vertex.names(net))
       colors = t(col2rgb(net %n% "party_colors"))
@@ -444,19 +382,18 @@ net_gexf <- function(file = c("an", "se"), sessions = 8:14,
     
       names(node.att)[1] = "label"
     
-      # compress floats and add 5% jitter to lon/lat to avoid overplotting
-      node.att[, "distance"] = round(node.att[, "distance"], 2)
+      # compress float
+      node.att$distance = round(node.att$distance, 2)
     
-      node.att[ is.na(node.att[, "lon"]), "lon"] = mean(node.att[, "lon"], na.rm = TRUE)
-      node.att[ is.na(node.att[, "lat"]), "lat"] = mean(node.att[, "lat"], na.rm = TRUE)
-      # node.att[ grepl("Guyane|Polynésie|hors de France", node.att[, "nom_circo"]), "lon"] = mean(node.att[, "lon"], na.rm = TRUE)
-      # node.att[ grepl("Guyane|Polynésie|hors de France", node.att[, "nom_circo"]), "lat"] = mean(node.att[, "lat"], na.rm = TRUE)
+      # plot nodes with no coordinates at means
+      node.att$lon[ is.na(node.att$lon) ] = mean(node.att$lon, na.rm = TRUE)
+      node.att$lat[ is.na(node.att$lat) ] = mean(node.att$lat, na.rm = TRUE)
 
       # add 5% random noise to avoid overplotting
       if(is.function(entropize)) {
        
-        node.att[, "lon"] = entropize(node.att[, "lon"], network.size(net))
-        node.att[, "lat"] = entropize(node.att[, "lat"], network.size(net))
+        node.att$lon = entropize(node.att$lon, network.size(net))
+        node.att$lat = entropize(node.att$lat, network.size(net))
         
       }
     
@@ -471,7 +408,7 @@ net_gexf <- function(file = c("an", "se"), sessions = 8:14,
       )
       relations = na.omit(relations)
     
-      edge.att = data.frame(type = "arrow", weight = relations[, 3], stringsAsFactors = FALSE)
+      edgesWeight = data.frame(weight = relations$weight, stringsAsFactors = FALSE)
       relations = relations[, -3]
 
       nodecolors = lapply(node.att$party, function(x)
@@ -494,14 +431,12 @@ net_gexf <- function(file = c("an", "se"), sessions = 8:14,
     
       file = paste0("app/", j, i, ".gexf")
       write.gexf(nodes = people, edges = relations,
-                 nodesAtt = node.att, edgesWeight = edge.att$weight, # edgesAtt = edge.att,
-                 # edgesVizAtt = list(color = edgecolors, size = edge.att[, ties]),
-                 nodesVizAtt = list(position = position, color = nodecolors, size = node.att[, nodes]),
+                 nodesAtt = node.att, edgesWeight = edgesWeight,
+                 nodesVizAtt = list(position = position,
+                                    color = nodecolors,
+                                    size = node.att[, nodes]),
                  defaultedgetype = "arrow",
-                 meta = list(creator = "rgexf",
-                             description = paste("chamber:", j, "legislature:", i, "- placement:", mode,
-                                                 "- tie size:", ties, "- node size:", nodes),
-                             keywords = "Parlement, Parliament, France"),
+                 meta = meta,
                  output = file)
     
       msg("Exported legislature", i, file_size(file))
@@ -512,10 +447,17 @@ net_gexf <- function(file = c("an", "se"), sessions = 8:14,
   
 }
 
+#' Sensitivity tests
+#'
+#' Saves the table from Opsahl et al. (2010) that shows top nodes by weighted 
+#' degree at different values of the alpha parameter. Run on all available data
+#' by default.
+#' @author Tore Opsahl
+#' @source \url{http://toreopsahl.com/2010/04/21/article-node-centrality-in-weighted-networks-generalizing-degree-and-shortest-paths/}
 net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
 
-  file = paste0("models/modularity/", ch, x, ".rda")
-  chamber = ifelse(ch == "an", "Assemblée nationale", "Sénat")
+  file = paste0("measures/modularity/", ch, x, ".rda")
+  chamber = ifelse(grepl("an", ch), "Assemblée nationale", "Sénat")
 
   data = paste0("data/", ch, x, ".rda")
   if(file.exists(data))
@@ -523,20 +465,38 @@ net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
   else
     load(paste0("data/bi_", ch, x, ".rda"))
 
+  msg("Modeling", chamber, "legislature", x)
+
+  # weighted adjacency matrix to tnet
+  tnet = as.tnet(as.sociomatrix(net, attrname = weights), type = "weighted one-mode tnet")
+
+  # get degree at several values of alpha
+  degree = data.frame(
+    network.vertex.names(net),
+    degree_w(tnet, measure = c("degree", "output", "alpha"), alpha = 0.5),
+    degree_w(tnet, measure = "alpha", alpha = 1.5)[, "alpha"],
+    stringsAsFactors = FALSE
+  )
+  names(degree) = c("name", "node", "a00", "a10", "a05", "a15")  
+
+  # merge to names and degree into columns
+  degree = data.frame(
+    1:nrow(degree),
+    degree[order( -degree[, "a00"], -degree[, "a10"]), c("name", "a00" )],
+    degree[order( -degree[, "a05"], -degree[, "a10"]), c("name", "a05" )],
+    degree[order( -degree[, "a10"], -degree[, "a10"]), c("name", "a10" )],
+    degree[order( -degree[, "a15"], -degree[, "a10"]), c("name", "a15" )]
+  )
+  names(degree) = c("rank", "a00.name", "a00", "a05.name", "a05", 
+                  "a10.name", "a10", "a15.name", "a15")
+
+  write.csv(degree, file = paste0("measures/degree/", ch, x, ".csv"),
+            row.names = FALSE)
+
   if(!file.exists(file) | update) {
-  
-    msg("Modeling", chamber, "legislature", x)
-
-    tnet = as.tnet(as.sociomatrix(net), type = "weighted one-mode tnet")
-
-    # Gross, Kirkland and Shalizi 2012
-    if(weights == "wpc") {
-      wpc = table(tnet[, 1])[ as.character(tnet[, 1]) ]
-      tnet = cbind(tnet[, 1:2], w = tnet[, 3] / wpc)
-    }
 
     # symmetrise for undirected algorithms 
-    tnet = symmetrise_w(tnet, method = "AMEAN") # answers warning above
+    tnet = symmetrise_w(tnet, method = "AMEAN")
 
     # rename vertices
     tnet = data.frame(
@@ -548,6 +508,17 @@ net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
     # convert to igraph
     inet = graph.edgelist(as.matrix(tnet[, 1:2]), directed = FALSE)
     E(inet)$weight = tnet[, 3]
+
+    # get MP parliamentary groups
+    party = network::get.vertex.attribute(net, "party")
+    names(party) = network.vertex.names(net)
+  
+    # subset to nonmissing groups
+    V(inet)$party = party[ V(inet)$name ]
+    inet = inet - V(inet) [ is.na(V(inet)$party) ]
+  
+    # modularity
+    modularity = modularity(inet, membership = factor(V(inet)$party), weights = E(inet)$weight)
 
     # V(inet)$name = V(inet)$nom ## if merging to nodes
 
@@ -565,13 +536,13 @@ net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
 
     msg("Maximized to", n_distinct(louvain[[ "membership" ]]), "groups (Louvain)")
 
-    save(inet, walktrap, louvain, file = file)
-
   } else {
   
     load(file)
 
   }
+
+  save(degree, modularity, walktrap, louvain, file = file)
 
   return(data.frame(chamber,
                     Legislature = x,
@@ -584,7 +555,7 @@ net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
                     Distance = net %n% "distance",
                     Clustering = net %n% "clustering",
                     # maximized modularity
-                    Modularity = net %n% "modularity",
+                    Modularity = modularity,
                     Walktrap = modularity(walktrap),
                     Louvain = modularity(louvain),
                     # node-level measures
