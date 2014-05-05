@@ -259,17 +259,13 @@ sigma.parsers.gexf(
       // node color
       var rgba = e.data.node.color;
 
-      // hack alpha value
-      // rgba = rgba.replace('0.3)', '1)')
-
       // explicit party groups
-      //
       group = e.data.node.attributes['party'];
       party = "?";
       if(group == "CEN") party = "Centrists";
       if(group == "COM") party = "Communists";
       if(group == "SOC") party = "Socialists";
-      if(group == "DRO") party = "rightwing";
+      if(group == "DRO") party = "Conservatives";
       if(group == "FN") party = "Front National";
       if(group == "RAD") party = "Radicals";
       if(group == "ECO") party = "Greens";
@@ -314,7 +310,7 @@ sigma.parsers.gexf(
       defaultLabelSize: 18,
       font: "source sans pro",
       minEdgeSize: .1,
-      maxEdgeSize: .1,
+      maxEdgeSize: .3,
       labelHoverBGColor: 'node',
       defaultLabelHoverColor: '#fff',
       labelHoverShadow: 'node'
@@ -361,14 +357,13 @@ sigma.parsers.gexf(
     function(e){
       if (e.target.checked) {
         s.graph.edges().forEach(function(e) {
-          if(e.weight > .5)
-            e.size = 1;
-          else
-            e.size = 0;
+          // use upper quartile marker
+          if(e.weight < 2)
+            e.color = 'rgba(66,66,66,0)';
         });
         s.settings({
-          minEdgeSize: .1,
-          maxEdgeSize: 1
+          minEdgeSize: 0,
+          maxEdgeSize: .9
         });
       } else {
         s.graph.edges().forEach(function(e) {
@@ -376,7 +371,7 @@ sigma.parsers.gexf(
         });
         s.settings({
           minEdgeSize: .1,
-          maxEdgeSize: .1,
+          maxEdgeSize: .3,
         });
       }
       s.refresh();

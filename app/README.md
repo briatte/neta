@@ -6,10 +6,4 @@ Requires:
 [fa]: https://github.com/FortAwesome/Font-Awesome/archive/v4.0.3.zip
 [sigma]: https://github.com/jacomyal/sigma.js/releases/download/v1.0.2/release-v1.0.2.zip
 
-# TODO
-
-* `[ ]` [curved weighted edges](https://github.com/jacomyal/sigma.js/issues/157)
-* `[x]` improve geographic placement
-* `[x]` strong ties visualization
-* `[x]` add Senate data
-* `[x]` improve interface
+The graph can also be [rendered with Canvas](https://github.com/jacomyal/sigma.js/issues/261) to get curved edges with weighted transparency.
