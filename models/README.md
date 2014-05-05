@@ -16,7 +16,7 @@ The model takes a few days to converge on all series, and does so unequally well
 
 ## `ergm`
 
-Exponential random graph models that look at fixed differential homophily effects in the cosponsorship networks of each legislature. Estimates are provided only for major parliamentary groups where the sample size is sufficient to correctly estimate standard errors and avoid further model degeneracy due to infinite coefficients.
+Exponential random graph models that look at fixed differential homophily effects in the cosponsorship networks of each legislature. Differential homophily estimates are provided for parliamentary groups with at least ten members present in the network sample (Senate rules require only ten members to form a group; National Assembly rules used to require 20 before 2009, and now require only 15).
 
 The `ergm` ([Morris, Handock and Hunter 2008](http://www.jstatsoft.org/v24/i04)) specification is
 
@@ -27,7 +27,8 @@ ergm(net ~ edges +
      nodematch("female") + 
      nodematch("party", diff = TRUE) + 
      absdiffcat("rightwing"),
-   control = control.ergm(MCMLE.trustregion = 1000)
+   control = control.ergm(MCMLE.trustregion = 10^3,
+                          MCMLE.maxit = 100, seed = 3258)
 ```
 
 Prior to passing the network to the model, we thin it ([Cranmer and Desmarais 2011](http://people.umass.edu/bruced/pubs/Cranmer_Desmarais_PA2011.pdf), p. 78) by taking two quantiles of the log-distribution of edge weights, and subsampling the network to ties contained within this range. Because the log-distribution of edges weights is approximately normal in many cases, the default values (0.025, 0.975) thin the networks to an approximate maximum of 5% of all edges.
