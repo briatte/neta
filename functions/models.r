@@ -11,7 +11,7 @@ get_models <- function(key, sessions = 8:14) {
   } else if(key == "ergm") {
     
     # exponential random graph model at threshold (.025, .975) ~ 5% tie loss
-    get_ERGM(sessions, plot = TRUE)
+    get_ERGM(sessions, base = TRUE, plot = TRUE)
     
     # sensitivity tests at different thresholds
     get_ERGM(sessions, cutoff = c(0.025, 1)) # no upper threshold
@@ -228,197 +228,240 @@ plot_ERGMM <- function(file = "(an|se)[0-9]+", update = FALSE,
 #' @param cutoff threshold parameters used to thin the network, as a vector of
 #' two values between 0 and 1 used as quantile cutoff points against the edge
 #' weights log-distribution, which is roughly normal in several instances.
-get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), plot = FALSE, verbose = TRUE) {
+get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), base = FALSE, plot = FALSE, verbose = TRUE) {
   
-  coefs = dir( "models/ergm", pattern = paste0(cutoff[1], "_", cutoff[2], "(.*).pdf") )
-  if(length(coefs) > 0) {
-    
-    if(verbose)
-      message("Model found on disk.")
-    
-  } else {
-    
-    coefs = data.frame()
-    for(ch in c("se", "an")) {
+  coefs = data.frame()       # plots
+  betas = data.frame(b = NA) # table
 
-      chamber = ifelse(ch == "an", "Assemblée nationale", "Sénat")
+  for(ch in c("se", "an")) {
+
+    chamber = ifelse(ch == "an", "Assemblée nationale", "Sénat")
+  
+    for(file in paste0(ch, sessions)) {
     
-      for(file in paste0(ch, sessions)) {
+      legid = gsub("\\D", "", file)
+      title = paste(chamber, "legislature", legid)
+    
+      m = paste0("models/ergm/ergm_", cutoff[1], "_", cutoff[2], "_", file, ".rda")
+      if(!file.exists(m)) {
       
-        title = paste(chamber, "legislature", gsub("\\D", "", file))
+        sink(gsub(".rda", ".log", m))
+        msg("Modeling:", title, "cutoffs at", cutoff[1], "and", cutoff[2])
       
-        m = paste0("models/ergm/ergm_", cutoff[1], "_", cutoff[2], "_", file, ".rda")
-        if(!file.exists(m)) {
-        
-          sink(gsub(".rda", ".log", m))
-          msg("Modeling:", title, "cutoffs at", cutoff[1], "and", cutoff[2])
-        
-          data = paste0("data/", file, ".rda")
-          if(!file.exists(data))
-            load(paste0("data/bi_", file, ".rda"))
-          else
-            load(paste0("data/", file, ".rda"))
-        
-          net %v% "female" = net %v% "sexe" == "F"
-          net %v% "seniority" = net %v% "nb_mandats"
-        
-          w = log(net %e% "wpc")
-          q = c(-Inf, Inf)
-          if(cutoff[1] > 0) q[1] = as.vector(quantile(w, probs = cutoff[1]))
-          if(cutoff[2] < 1) q[2] = as.vector(quantile(w, probs = cutoff[2]))
+        data = paste0("data/", file, ".rda")
+        if(!file.exists(data))
+          load(paste0("data/bi_", file, ".rda"))
+        else
+          load(paste0("data/", file, ".rda"))
+      
+        net %v% "female" = net %v% "sexe" == "F"
+        net %v% "seniority" = net %v% "nb_mandats"
+      
+        w = log(net %e% "wpc")
+        q = c(-Inf, Inf)
+        if(cutoff[1] > 0) q[1] = as.vector(quantile(w, probs = cutoff[1]))
+        if(cutoff[2] < 1) q[2] = as.vector(quantile(w, probs = cutoff[2]))
 
-          cutoffs = qplot(w, geom = "density") + 
-            labs(title = paste0(title, "\n"))
+        cutoffs = qplot(w, geom = "density") + 
+          labs(title = paste0(title, "\n"))
 
-          if(!all(is.infinite(q)))
-            cutoffs = cutoffs +
-              geom_vline(xintercept = q[ !is.infinite(q) ],
-                         color = "grey25", linetype = "dashed")
+        if(!all(is.infinite(q)))
+          cutoffs = cutoffs +
+            geom_vline(xintercept = q[ !is.infinite(q) ],
+                       color = "grey25", linetype = "dashed")
 
-          net %n% "data" = paste(net %n% "data", "(sample edges)")
-          net %n% "edge_cutoff" = q
-                  
-          q = which(w < q[1] | w > q[2])
+        net %n% "data" = paste(net %n% "data", "(sample edges)")
+        net %n% "edge_cutoff" = q
+                
+        q = which(w < q[1] | w > q[2])
 
-          if(verbose)
-            cat("Dropping:", length(q), "edges out of", length(w),
-                round(100 * length(q) / length(w), 1), "% of sample\n")
+        if(verbose)
+          cat("Dropping:", length(q), "edges out of", length(w),
+              round(100 * length(q) / length(w), 1), "% of sample\n")
 
-          network::delete.edges(net, q)
-                  
-          net %n% "edge_sample" = network.edgecount(net) / length(w)
+        network::delete.edges(net, q)
+                
+        net %n% "edge_sample" = network.edgecount(net) / length(w)
 
-          # merge appended sponsors to main groups
-          s = net %v% "party"
-          if(sum(s == "ECO", na.rm = TRUE) < 10 & any(s == "ECO")) {
-            cat("Marking", sum(s == "ECO", na.rm = TRUE),
-                "Green MPs as Socialists (n < 10)\n")
-            s[ s == "ECO" ] = "SOC"
-          }
-          if(sum(s == "COM", na.rm = TRUE) < 10 & any(s == "COM")) {
-            cat("Marking", sum(s == "COM", na.rm = TRUE),
-                "Communist MPs as Socialists (n < 10)\n")
-            s[ s == "COM" ] = "SOC"
-          }
-          network::set.vertex.attribute(net, "party", s)
-
-          q = which(s == "SE")
-          if(verbose)
-            cat("Marking", length(q), "unaffiliated MPs as NA\n")
-
-          net %v% "party" = ifelse(s == "SE", NA, s)
-          print(table(net %v% "party", exclude = NULL))
-
-          net %v% "rightwing" = as.numeric(net %v% "party" %in% c("DRO", "CEN", "FN"))
-
-          cat("\n")
-          print(net)
-
-          # Poisson-reference ERGM
-          ERGM = ergm(net ~ edges + 
-                        mutual + 
-                        absdiff("seniority") + 
-                        nodematch("female") + 
-                        nodematch("party", diff = TRUE) + 
-                        absdiffcat("rightwing"),
-                      control = control.ergm(MCMLE.trustregion = 10^3,
-                                             MCMLE.maxit = 100, seed = 3258)
-          )
-                  
-          print(summary(ERGM))
-          sink()
-          
-          if(plot)
-            ggmcmc(ggs(as.mcmc.list(ERGM$sample)),
-                   file = gsub(".rda", ".pdf", m), plot = "density traceplot")
-        
-          save(ERGM, net, cutoffs, file = m)
-        
+        # merge appended sponsors to main groups
+        s = net %v% "party"
+        if(sum(s == "ECO", na.rm = TRUE) < 10 & any(s == "ECO")) {
+          cat("Marking", sum(s == "ECO", na.rm = TRUE),
+              "Green MPs as Socialists (n < 10)\n")
+          s[ s == "ECO" ] = "SOC"
         }
+        if(sum(s == "COM", na.rm = TRUE) < 10 & any(s == "COM")) {
+          cat("Marking", sum(s == "COM", na.rm = TRUE),
+              "Communist MPs as Socialists (n < 10)\n")
+          s[ s == "COM" ] = "SOC"
+        }
+        network::set.vertex.attribute(net, "party", s)
+
+        q = which(s == "SE")
+        if(verbose)
+          cat("Marking", length(q), "unaffiliated MPs as NA\n")
+
+        net %v% "party" = ifelse(s == "SE", NA, s)
+        print(table(net %v% "party", exclude = NULL))
+
+        net %v% "rightwing" = as.numeric(net %v% "party" %in% c("DRO", "CEN", "FN"))
+
+        cat("\n")
+        print(net)
+
+        ctrl = control.ergm(MCMLE.trustregion = 10^3,
+                            MCMLE.maxit = 100, seed = 3258)
+
+        # Poisson-reference ERGM
+        ERGM = ergm(net ~ edges + mutual + 
+                      absdiff("seniority") + 
+                      nodematch("female") + 
+                      nodematch("party", diff = TRUE) + 
+                      absdiffcat("rightwing"),
+                    control = ctrl)
+                
+        print(summary(ERGM))
+        sink()
+        
+        save(ERGM, net, cutoffs, file = m)
+        
+        # baseline coefficients (saved but not logged)
+        if(base) {
+          message("Adding baseline model...")
+          ERGM_base = ergm(net ~ edges + mutual + 
+                             absdiff("seniority") + 
+                             nodematch("female") + 
+                             absdiffcat("rightwing"),
+                           control = ctrl)
+
+          save(ERGM_base, ERGM, net, cutoffs, file = m)
       
-        load(m)
-        s = summary(ERGM)[['coefs']][-3]
-        s = cbind(Chamber = chamber, Legislature = gsub("\\D", "", file), b = rownames(s), s)
-        coefs = rbind(coefs, s)
-      
-        # mcmc.diagnostics(fit)
-      
+        }
+    
       }
+    
+      load(m)
+      
+      f = summary(ERGM)$coefs[, 1:2]
+      b = c("edges" = "Edges",
+            "mutual" = "Reciprocity",
+            "nodematch.female" = "same: Gender",
+            "absdiff.seniority" = "diff: Seniority",
+            "absdiff.rightwing.1" = "diff: Left-Right",
+            "nodematch.party.FN"  = "single (positive) estimate, not shown",
+            "nodematch.party.DRO" = "Both Conservatives",
+            "nodematch.party.CEN" = "Both Centrists",
+            "nodematch.party.RAD" = "Both Radicals",
+            "nodematch.party.SOC" = "Both Socialists",
+            "nodematch.party.COM" = "Both Communists",
+            "nodematch.party.ECO" = "single (positive) estimate, not shown")
+      f$b = b[ rownames(f) ]
+  
+      # update coefficients plot
+      s = cbind(Chamber = chamber, Legislature = legid, Model = "Full", f)
+      coefs = rbind(coefs, s)
+  
+      # update coefficients table
+      names(f)[1] = paste0(ch, legid)
+      names(f)[2] = paste0(ch, legid, "_se")
+      betas = merge(betas, f, by = "b", all = TRUE)
+  
+      # add baseline coefficients
+      if(base) {
+    
+        # go through summary
+        f = summary(ERGM_base)$coefs[, 1:2]
+        f$b = b[ rownames(f) ]
+    
+        # update coefficients plot
+        s = cbind(Chamber = chamber, Legislature = legid, Model = "Baseline", f)
+        coefs = rbind(coefs, s)
+          
+      }
+      
+      # diagnostics
+      g = gsub(".rda", ".pdf", m)
+      if(!file.exists(g) & plot)
+        ggmcmc(ggs(as.mcmc.list(ERGM$sample)), file = g, plot = "density traceplot")
     
     }
   
-    # renaming
-    coefs$b = as.character(coefs$b)
-    coefs$b [ coefs$b == "edges" ] = "Edges"
-    coefs$b [ coefs$b == "mutual" ] = "Reciprocity"
-    coefs$b [ coefs$b == "absdiff.seniority" ] = "diff: Seniority"
-    coefs$b [ coefs$b == "nodematch.female" ] = "same: Gender"
-    coefs$b [ coefs$b == "nodematch.party.CEN" ] = "Both Centrists"
-    coefs$b [ coefs$b == "nodematch.party.DRO" ] = "Both Conservatives"
-    coefs$b [ coefs$b == "nodematch.party.SOC" ] = "Both Socialists"
-    coefs$b [ coefs$b == "nodematch.party.RAD" ] = "Both Radicals"
-    coefs$b [ coefs$b == "nodematch.party.ECO" ] = "single (positive) estimate, not shown"
-    coefs$b [ coefs$b == "nodematch.party.COM" ] = "Both Communists"
-    coefs$b [ coefs$b == "nodematch.party.FN" ] = "single (positive) estimate, not shown"
-    coefs$b [ coefs$b == "absdiff.rightwing.1" ] = "diff: Left-Right"
-
-    # reordering
-    l = c("Both Conservatives", "Both Centrists", "Both Radicals", "Both Socialists", "Both Communists")
-    l = c("Edges", "Reciprocity", "same: Gender", "diff: Seniority", "diff: Left-Right", l)
-    coefs$b = factor(coefs$b, levels = l)
-    names(coefs)[5] = "SE"
-    names(coefs)[6] = "p"
-    coefs$t = coefs$SE / coefs$Estimate
-      
-    # dropping huge SEs
-    coefs = subset(coefs, !is.na(b) & t < 1/2 & t > -1/2)
-      
-    # coefficients
-    g = qplot(data = subset(coefs, !grepl("Both|Edges", b)),
-              x = Legislature, y = Estimate,
-              ymin = Estimate - 3 * SE, ymax = Estimate + 3 * SE,
-              group = b, color = I("grey25"), geom = "pointrange") + 
-      geom_hline(yintercept = 0, linetype = "dashed", color = "grey75") +
-      facet_grid(b ~ Chamber, scales = "free_y") +
-      labs(y = "Estimate\n", x = "\nLegislature") +
-      coord_equal() +
-      theme_grey(16) +
-      theme(legend.position = "none",
-            panel.grid = element_blank(),
-            panel.background = element_rect(fill = "grey95"),
-            strip.background = element_rect(fill = "grey85"),
-            panel.margin = unit(.5, "cm"))
-      
-    ggsave(paste0("models/ergm/ergm_beta_", cutoff[1], "_", cutoff[2], ".pdf"),
-           g, width = 9, height = 9)
-      
-    # differential homophily
-    g = qplot(data = subset(coefs, grepl("Both", b)),# & Estimate + 3 * SE < 5),
-              x = Legislature, y = Estimate, color = b, group = b, 
-              ymin = Estimate - 3 * SE, ymax = Estimate + 3 * SE,
-              geom = "pointrange") + 
-      geom_pointrange(alpha = .5, color = "grey25") +
-      geom_hline(yintercept = 0, linetype = "dashed", color = "grey75") +
-      scale_color_manual("", values = c(
-        "Both Communists" = "#E41A1C", # (L; red)
-        "Both Radicals" = "#FFFF33", # (L; yellow)
-        "Both Socialists" = "#F781BF", # (or large L coalition; pink)
-        "Both Centrists" = "#FF7F00", # (R; orange)
-        "Both Conservatives" = "#377EB8" # (R; blue)
-        )) +
-      facet_grid(b ~ Chamber) +
-      labs(y = "Estimate\n", x = "\nLegislature") +
-      theme_grey(16) +
-      theme(legend.position = "none",
-            panel.grid = element_blank(),
-            panel.background = element_rect(fill = "grey95"),
-            strip.background = element_rect(fill = "grey85"),
-            panel.margin = unit(.5, "cm"))
-    
-    ggsave(paste0("models/ergm/ergm_diff_", cutoff[1], "_", cutoff[2], ".pdf"),
-           g, width = 9, height = 11)
-    
   }
+
+  # order table rows
+  betas$b = factor(betas$b, levels = b[ !grepl("not shown", b)], ordered = TRUE)
+  betas = betas[ !is.na(betas$b) , ]
+  betas = betas[ order(as.numeric(betas$b)), ]
+
+  # save coefficients
+  names(betas) = toupper(names(betas))
+  names(betas) = gsub("(.*)_SE", "SE", names(betas))
+  write.csv(betas, file = paste0("models/ergm/ergm_", cutoff[1], "_", cutoff[2], ".csv"))
+
+  # reordering
+  l = c("Both Conservatives", "Both Centrists", "Both Radicals", "Both Socialists", "Both Communists")
+  l = c("Edges", "Reciprocity", "same: Gender", "diff: Seniority", "diff: Left-Right", l)
+  coefs$b = factor(coefs$b, levels = l)
+
+  # t-values
+  names(coefs)[5] = "SE"
+  coefs$t = coefs$SE / coefs$Estimate
+  coefs = subset(coefs, !is.na(b) & t < 1/2 & t > -1/2)
+
+  # sort models
+  coefs$Model = factor(coefs$Model, levels = c("Baseline", "Full"))
+
+  # sort legislatures
+  coefs$id = paste0(as.character(coefs$Legislature), substr(coefs$Model, 1, 1))
+  coefs$id = factor(coefs$id, levels = unlist(lapply(8:14, paste0, c("B", "F"))))
+
+  g = qplot(data = subset(coefs, !grepl("Both|Edges", b)), x = id, y = Estimate, 
+            ymin = Estimate - 3 * SE, ymax = Estimate + 3 * SE, group = b, geom = "pointrange") + 
+    geom_hline(yintercept = 0, linetype = "dashed", color = "grey75") +
+    facet_grid(b ~ Chamber, scales = "free_y") +
+    labs(y = "Estimate\n", x = "\nLegislature") +
+    coord_equal() +
+    theme_grey(16) +
+    theme(legend.position = "bottom",
+          panel.grid = element_blank(),
+          panel.background = element_rect(fill = "grey95"),
+          strip.background = element_rect(fill = "grey85"),
+          panel.margin = unit(.5, "cm"))
+
+  if(base)
+    g = g + aes(color = Model) + scale_x_discrete(breaks = gsub("(.*)F", "", levels(coefs$id)),
+                                                  labels = gsub("\\D", "", levels(coefs$id)))
+  else
+    g = g + scale_x_discrete(labels = sessions)
+    
+  ggsave(paste0("models/ergm/ergm_beta_", cutoff[1], "_", cutoff[2], ".pdf"),
+         g, width = 9, height = 9)
+    
+  # differential homophily
+  g = qplot(data = subset(coefs, Model == "Full" & grepl("Both", b)),
+            x = Legislature, y = Estimate, color = b, group = b, 
+            ymin = Estimate - 3 * SE, ymax = Estimate + 3 * SE,
+            geom = "pointrange") + 
+    geom_pointrange(alpha = .5, color = "grey25") +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "grey75") +
+    scale_color_manual("", values = c(
+      "Both Communists" = "#E41A1C",   # (L; red)
+      "Both Radicals" = "#FFFF33",     # (L; yellow)
+      "Both Socialists" = "#F781BF",   # (or large L coalition; pink)
+      "Both Centrists" = "#FF7F00",    # (R; orange)
+      "Both Conservatives" = "#377EB8" # (R; blue)
+      )) +
+    facet_grid(b ~ Chamber) +
+    labs(y = "Estimate\n", x = "\nLegislature") +
+    theme_grey(16) +
+    theme(legend.position = "none",
+          panel.grid = element_blank(),
+          panel.background = element_rect(fill = "grey95"),
+          strip.background = element_rect(fill = "grey85"),
+          panel.margin = unit(.5, "cm"))
+  
+  ggsave(paste0("models/ergm/ergm_diff_", cutoff[1], "_", cutoff[2], ".pdf"),
+         g, width = 9, height = 11)
   
 }
 
