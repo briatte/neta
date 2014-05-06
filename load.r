@@ -6,10 +6,10 @@ scripts = paste0("functions/", dir("functions", pattern = ".r"))
 scripts = lapply(scripts, source)
 
 # required packages
-packages = c("animation", "coda", "downloader", "ergm", "ggplot2", "ggmap", "grid",
-             "latentnet", "lubridate", "network", "plyr", "RColorBrewer", "reshape",
-             "rjson", "stringr", "XML", "dplyr", "tnet", "rgexf", "RPostgreSQL",
-             "sna", "scales", "xtable")
+packages = c("animation", "coda", "downloader", "ergm", "ggmap", "ggmcmc",
+             "ggplot2", "grid", "latentnet", "lubridate", "network", "plyr", 
+             "RColorBrewer", "reshape", "rgexf", "rjson", "RPostgreSQL",
+             "scales", "sna", "stringr", "tnet", "XML", "xtable", "dplyr")
 
 # install-and-load
 packages = lapply(packages, function(x) {

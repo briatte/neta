@@ -11,7 +11,7 @@ get_models <- function(key, sessions = 8:14) {
   } else if(key == "ergm") {
     
     # exponential random graph model at threshold (.025, .975) ~ 5% tie loss
-    get_ERGM(sessions)
+    get_ERGM(sessions, plot = TRUE)
     
     # sensitivity tests at different thresholds
     get_ERGM(sessions, cutoff = c(0.025, 1)) # no upper threshold
@@ -228,7 +228,7 @@ plot_ERGMM <- function(file = "(an|se)[0-9]+", update = FALSE,
 #' @param cutoff threshold parameters used to thin the network, as a vector of
 #' two values between 0 and 1 used as quantile cutoff points against the edge
 #' weights log-distribution, which is roughly normal in several instances.
-get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), verbose = TRUE) {
+get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), plot = FALSE, verbose = TRUE) {
   
   coefs = dir( "models/ergm", pattern = paste0(cutoff[1], "_", cutoff[2], "(.*).pdf") )
   if(length(coefs) > 0) {
@@ -327,6 +327,10 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), verbose = TRUE) {
                   
           print(summary(ERGM))
           sink()
+          
+          if(plot)
+            ggmcmc(ggs(as.mcmc.list(ERGM$sample)),
+                   file = gsub(".rda", ".pdf", m), plot = "density traceplot")
         
           save(ERGM, net, cutoffs, file = m)
         
