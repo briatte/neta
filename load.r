@@ -8,7 +8,7 @@ scripts = lapply(scripts, source)
 # required packages
 packages = c("animation", "coda", "downloader", "ergm", "ggplot2", "ggmap", "grid",
              "latentnet", "lubridate", "network", "plyr", "RColorBrewer", "reshape",
-             "rjson", "RPostgreSQL", "stringr", "XML", "dplyr", "tnet", "rgexf",
+             "rjson", "stringr", "XML", "dplyr", "tnet", "rgexf", "RPostgreSQL",
              "sna", "scales", "xtable")
 
 # install-and-load
@@ -21,8 +21,9 @@ packages = lapply(packages, function(x) {
 
 # folders
 folders = c("amendements", "dossiers", "indexes")
-folders = c("app", "data", "plots", "raw", "models",
-            paste0("models/", c("degree", "modularity", "ergm", "ergmm")),
+folders = c("app", "data", "plots", "plots/counts", "plots/measures", "raw", "models",
+            paste0("measures/", c("degree", "modularity")),
+            paste0("models/", c("ergm", "ergmm")),
             paste0("raw/",
                    c(
                      "an", paste0("an/", c(folders, "deputes")),
