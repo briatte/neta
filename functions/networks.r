@@ -463,8 +463,8 @@ net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
   else
     load(paste0("data/bi_", ch, x, ".rda"))
   
-  msg("Modeling", chamber, "legislature", x)
-  
+  msg("Network:", chamber, "legislature", x)
+
   # weighted adjacency matrix to tnet
   tnet = as.tnet(as.sociomatrix(net, attrname = weights), type = "weighted one-mode tnet")
   
@@ -507,17 +507,31 @@ net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
     inet = graph.edgelist(as.matrix(tnet[, 1:2]), directed = FALSE)
     E(inet)$weight = tnet[, 3]
     
-    # get MP parliamentary groups
-    party = network::get.vertex.attribute(net, "party")
-    names(party) = network.vertex.names(net)
+    # merge appended sponsors to main groups
+    s = net %v% "party"
+    if(sum(s == "ECO", na.rm = TRUE) < 10 & any(s == "ECO"))
+      s[ s == "ECO" ] = "SOC"
+    if(sum(s == "COM", na.rm = TRUE) < 10 & any(s == "COM"))
+      s[ s == "COM" ] = "SOC"
+
+    # drop unaffiliated sponsors
+    s = ifelse(s == "SE", NA, s)
     
+    # get MP parliamentary groups
+    names(s) = network.vertex.names(net)
+  
     # subset to nonmissing groups
-    V(inet)$party = party[ V(inet)$name ]
-    inet = inet - V(inet) [ is.na(V(inet)$party) ]
+    V(inet)$party = factor(s[ V(inet)$name ])
+    print(table(V(inet)$party, exclude = NULL))
+
+    inet = inet - which(is.na(V(inet)$party))
     
     # modularity
-    modularity = modularity(inet, membership = factor(V(inet)$party), weights = E(inet)$weight)
+    modularity = modularity(inet, membership = V(inet)$party, weights = E(inet)$weight)
     
+    msg("Modularity:", round(modularity, 2),
+        "over", n_distinct(V(inet)$party), "groups")
+
     # V(inet)$name = V(inet)$nom ## if merging to nodes
     
     # maximized Walktrap (Waugh et al. 2009, arXiv:0907.3509, Section 2.3)

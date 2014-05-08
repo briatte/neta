@@ -464,8 +464,12 @@ plot_attributes <- function(type = "all", sessions = 8:14) {
   dots_an = subset(da, chamber == "Assemblée nationale" & Legislature > 11)
   dots_se = subset(da, chamber == "Sénat" & Legislature > 10)
 
-  g = qplot(data = da, x = Legislature, y = value,
+  # mark A10 as faulty
+  da$faulty = with(da, chamber == "Assemblée nationale" & Legislature == 10 & variable %in% c("Centralization", "Distance", "Clustering", "Modularity", "Walktrap", "Louvain", "Betweenness", "Closeness", "Constraint"))
+
+  g = qplot(data = subset(da, !faulty), x = Legislature, y = value,
             color = chamber, geom = "line") +
+    geom_point(data = subset(da, faulty), color = "grey50") +
     scale_x_continuous(breaks = sessions) +
     scale_colour_brewer("", palette = "Set2") +
     facet_wrap(~ variable, ncol = 3, scales = "free_y") +
