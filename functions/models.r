@@ -269,7 +269,6 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), base = FALSE, plot
         else
           load(paste0("data/", file, ".rda"))
       
-        net = net13
         net %v% "female" = net %v% "sexe" == "F"
         net %v% "seniority" = net %v% "nb_mandats"
       

@@ -1,0 +1,43 @@
+\usepackage{pa}      % by Jonathan Katz
+
+% hyperlinks and metadata
+\usepackage[bookmarks, breaklinks, pdftitle={neta}, pdfauthor={François Briatte}]{hyperref}
+
+% TABLES AND FIGURES
+\usepackage{caption} % boring margin work
+\usepackage{subcaption}
+\newcommand{\legend}[1]{\vspace{1em}\caption{#1}}
+\newcommand{\sublegend}[1]{\subcaption{#1}\vspace{1em}}
+\usepackage{multicol} % bibliography
+
+% ---- PAGES
+\usepackage{geometry} 
+\geometry{a4paper, textwidth=5.5in, textheight=9.6in, marginparwidth=.6in}
+\setlength\parindent{0em}
+\setlength{\parskip}{1em}
+\usepackage{setspace}
+\doublespacing
+
+% \usepackage[style=chicago-notes,url=false,doi=false,isbn=false,maxnames=2,maxbibnames=2,firstinits,sorting=none,backend=biber]{biblatex}
+% \bibliography{neta.bib}
+\usepackage{natbib}
+\renewcommand{\harvardurl}{URL: \url}
+
+% ---- FONTS
+\usepackage[utf8]{inputenx}
+\usepackage[english]{babel}
+
+% \usepackage[greek=n]{libgreek}
+\usepackage{libertine}
+\usepackage[scaled=.92]{inconsolata} % not working with '$' or '<-' etc.
+% \usepackage[defaultmathsizes]{mathastext}
+% \usepackage{microtype}
+
+% ----- MATH
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\newcommand\vm[1]{% by Donald Arsenau
+\bm{\mathrm{#1}}}
+
+\usepackage{endnotes}

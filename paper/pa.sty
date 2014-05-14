@@ -1,0 +1,67 @@
+% $Id: pa.sty,v 1.8 1999/03/15 19:47:33 jkatz Exp $
+% pa.sty
+% by Jonathan N. Katz <j-katz@uchicago.edu>
+%
+% Purpose: To set articles using PA guidelines.
+%
+
+% No numbered sections
+\setcounter{secnumdepth}{2}
+
+% Redefine section commands to get appropriate apparence
+
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\@seccntformat}[1]%
+  {\normalfont\csname the#1\endcsname.\hspace{0.5em}}
+\renewcommand{\section}{\@startsection%
+  {section}%                                    % the name
+  {1}%                                          % the level
+  {0mm}%                                        % the intent
+  {-\baselineskip}%                             % the beforeskip
+  {\baselineskip}%                              % the afterskip
+  {\normalfont\normalsize\centering\uppercase}% % the style             
+}
+
+
+\renewcommand{\thesubsection}{\arabic{section}.\arabic{subsection}}
+\renewcommand{\subsection}{\@startsection%
+  {subsection}%                                 % the name
+  {2}%                                          % the level
+  {0mm}%                                        % the intent
+  {-\baselineskip}%                             % the beforeskip
+  {\baselineskip}%                              % the afterskip
+  {\normalfont\normalsize\itshape\centering}%   % the style             
+}
+
+\renewcommand{\subsubsection}{\@startsection%
+  {subsubsection}%                              % the name
+  {3}%                                          % the level
+  {0mm}%                                        % the intent
+  {-0.5\baselineskip}%                          % the beforeskip
+  { -\fontdimen2\font%                          % the afterskip 
+    plus -\fontdimen3\font%  
+    minus -\fontdimen4\font}%
+  {\normalfont\normalsize\itshape}%             % the style             
+}
+
+\if@titlepage
+ \renewenvironment{abstract}
+    {\titlepage
+     \null\vfil
+     \begin{center} ABSTRACT \end{center}\begin{quote}}
+    {\end{quote}\vfil\null\endtitlepage}
+\else
+\renewenvironment{abstract}
+   {\begin{center} ABSTRACT \end{center}\begin{quote}}
+   {\end{quote}}
+\fi
+
+\renewcommand{\refname}{REFERENCES}
+
+\renewcommand{\appendix}{%
+     \setcounter{section}{0}%
+     \renewcommand{\thesubsection}{\Alph{section}.\arabic{subsection}}%
+     \renewcommand{\thesection}{\Alph{section}}%
+}
+
+
