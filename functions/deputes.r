@@ -16,7 +16,7 @@ get_sycomore <- function(x, sample = FALSE, verbose = FALSE,
   sycomore = paste0(root, unique(sycomore))
   
   if(verbose)
-    msg("Parsing: legislature", x - 47, length(sycomore), "MPs")
+    msg("Parsing: legislature", session - 47, length(sycomore), "MPs")
   
   # MP-level details
   sycomore = lapply(sycomore, function(i, session = x - 47) {
@@ -105,7 +105,7 @@ get_deputes <- function(sessions = 1:14, verbose = TRUE) {
   if(!file.exists(data)) {
     
     # download Fifth Republic MPs
-    deputes = unique(rbind.fill(lapply( x + 47, get_sycomore))) # 1:14 = 55:61
+    deputes = unique(rbind.fill(lapply( sessions + 47, get_sycomore))) # 1:14 = 55:61
     
     # clean names
     deputes$nom = str_trim(clean_names(deputes$nom))

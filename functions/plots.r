@@ -450,14 +450,14 @@ plot_groups <- function(sessions = 8:14) {
   
 }
 
-#' Plot network statistics and node attributes
+#' Plot network statistics
 #'
 #' @keywords paper
 plot_attributes <- function(type = "all", sessions = 8:14) {
   
   type = ifelse(type == "all", "", paste0(type, "_"))
-  se = rbind.fill(lapply(sessions, net_modularity, ch = paste0(type, "se")))
-  an = rbind.fill(lapply(sessions, net_modularity, ch = paste0(type, "an")))
+  se = rbind.fill(lapply(sessions, get_measures, ch = paste0(type, "se")))
+  an = rbind.fill(lapply(sessions, get_measures, ch = paste0(type, "an")))
   da = melt(rbind(an, se), c("chamber", "Legislature"))
 
   # mark amendments series
@@ -465,7 +465,7 @@ plot_attributes <- function(type = "all", sessions = 8:14) {
   dots_se = subset(da, chamber == "Sénat" & Legislature > 10)
 
   # mark A10 as faulty
-  da$faulty = with(da, chamber == "Assemblée nationale" & Legislature == 10 & variable %in% c("Centralization", "Distance", "Clustering", "Modularity", "Walktrap", "Louvain", "Betweenness", "Closeness", "Constraint"))
+  da$faulty = with(da, chamber == "Assemblée nationale" & Legislature == 10 & variable %in% c("Centralization", "Distance", "Global.Clustering", "Modularity", "Modularity.Max", "Modularity.Ratio", "Betweenness", "Local.Clustering", "Constraint"))
 
   g = qplot(data = subset(da, !faulty), x = Legislature, y = value,
             color = chamber, geom = "line") +
@@ -484,7 +484,7 @@ plot_attributes <- function(type = "all", sessions = 8:14) {
 
   type = ifelse(type == "", "full", gsub("_", "", type))
   ggsave(paste0("plots/measures/", type, ".pdf"),
-         g, width = 9, height = 9)
+         g, width = 11, height = 9)
 
 }
 

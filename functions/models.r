@@ -28,53 +28,64 @@ get_models <- function(key, sessions = 8:14) {
 #' Caution: the estimator does not scale well, so you might want to parallelize
 #' the run with foreach, or use a more parsimonious method like the one covered
 #' in Vu et al., Ann. Appl. Stat. 7: 1010-1039, 2013 (doi:10.1214/12-AOAS617).
-get_ERGMM <- function(ch, sessions = 8:14) {
-
-  stopifnot(ch %in% c("an", "se"))  
-  load(paste0("data/", ch, ".rda"))
-
-  R = paste0("ergmm/", ch)
-  N = ls(pattern = "^net[0-9]+")
-  N = sort(as.numeric(gsub("\\D", "", N)))
-  N = N [ N %in% sessions ]
-
-  chamber = ifelse(ch == "an", "Assemblée nationale", "Sénat")
-  msg("Parsing:", chamber, length(N), "legislatures")
-
-  for(i in N) {
-
-    file = paste0("models/", R, i, ".rda")
-    name = paste0(R, i)
-    title = paste(chamber, "legislature", gsub("\\D", "", i))
-
-    if(!file.exists(file)) {
-
-      net = get(paste0("net", i))
-      t = table(net %v% "party")
+get_ERGMM <- function(sessions = 8:14) {
+  
+  for(ch in c("an", "se")) {
+    
+    chamber = ifelse(ch == "an", "Assemblée nationale", "Sénat")
+    
+    for(file in paste0(ch, sessions)) {
       
-      # ignore small-n and 'SE'
-      g = length(t[ t > 5 & names(t) != "SE" ])
-
-      msg("Modeling:", title, g, "groups")
-
-      # be patient for a few days
-      ERGMM = ergmm(net ~ euclidean(d = 2, G = g) + rreceiver,
-                    response = "count", family = "Poisson.log",
-                    control = ergmm.control(burnin = 10^3,
-                                            sample.size = 2000,
-                                            interval = 5),
-                    verbose = TRUE)
-
-      save(ERGMM, file = file)
+      legid = gsub("\\D", "", file)
+      title = paste(chamber, "legislature", legid)
       
-    } else{
-      
-      plot_ERGMM(paste0(ch, i))
+      m = paste0("models/ergmm/ergmm_", file, ".rda")
+      if(!file.exists(m)) {
+        
+        data = paste0("data/", file, ".rda")
+        if(!file.exists(data))
+          load(paste0("data/bi_", file, ".rda"))
+        else
+          load(paste0("data/", file, ".rda"))
+        
+        net %v% "female" = net %v% "sexe" == "F"
+        net %v% "seniority" = net %v% "nb_mandats"
+        
+        # identify number of relevant latent space clusters
+        g = table(na.omit(net %v% "party"))
+        g = length(g[ g > 9 & names(g) != "SE" ])
+        
+        msg("Modeling:", title, g, "clusters (n > 10)")
 
+        # dependent variable and unobserved group memberships
+        print(table(net %e% "count"))
+        print(table(net %v% "party", exclude = NULL))
+        
+        ctrl = ergmm.control(burnin = 10^5,      # 100 * default
+                             sample.size = 5000, # default + 1000
+                             interval = 10)      # default
+                                                      
+        # two-dimensional latent clustering random effects model; Krivitsky et
+        # al. 2012 equation 4, using counts of ties and a Poisson distribution 
+        # to account for overdispersion (NOTE: takes several hours to compute)
+        ERGMM = ergmm(net ~ euclidean(d = 2, G = g) + rreceiver + rsender,
+                      response = "count", family = "Poisson.log",
+                      control = ctrl, seed = 2357, verbose = TRUE)
+
+        # save model results
+        save(ERGMM, file = m)
+        
+        # densities and traceplots
+        ggmcmc(ggs(as.mcmc.list(ERGMM)),
+               file = gsub(".rda", "_trace.pdf", m),
+               plot = "density traceplot")
+        
+      }
+      
     }
-
+    
   }
-
+  
 }
 
 #' Draw a circle in ggplot2
@@ -96,7 +107,7 @@ circle <- function(center = c(0, 0), diameter = 1, npoints = 100) {
 plot_ERGMM <- function(file = "(an|se)[0-9]+", update = FALSE,
                        palette = RColorBrewer::brewer.pal(8, "Set3")) {
 
-  stopifnot(all(grepl("^(an|se)", file)))
+  stopifnot(all(grepl("^(\\(|an|se)", file)))
 
   objects = dir("models/ergmm/", pattern = paste0(file, ".rda"))
   objects = paste0("models/ergmm/", objects)
@@ -118,28 +129,30 @@ plot_ERGMM <- function(file = "(an|se)[0-9]+", update = FALSE,
       G  = ERGMM[["model"]][["G"]]
       Yg = ERGMM[["model"]][["Yg"]]
       n = network.size(Yg)
-  
+      
       cat("Plotting:", n, "nodes", G, "groups...")
       s = summary(ERGMM, point.est = "pmean")
-  
+      
       # placement
       Z = s[["pmean"]][["Z"]]
       Yg %v% "lon" = Z[, 1]
       Yg %v% "lat" = Z[, 2]
-  
+      
       # conditional means
       s      = s[["pmean"]]
       Z.mean = s[["Z.mean"]]
       Z.var  = s[["Z.var"]]
       Z.K    = s[["Z.K"]]
-  
-      # size nodes by quartiles of receiver random effects
-      if(ERGMM[["model"]][ "receiver" ][[1]]) {
-        q = s[ "receiver" ][[1]]
+      
+      # size nodes by quartiles of random effects
+      if(ERGMM[["model"]][ "sender" ][[1]]) {
+        q = as.vector(s['sender'][[1]])
         q = cut(q, quantile(q), include.lowest = TRUE)
-        q = as.numeric(q) - 1
+        Yg %v% "size" = as.numeric(q) - 1
+      } else {
+        Yg %v% "size" = 0
       }
-
+      
       # plot conditional posterior means
       mu = lapply(1:nrow(Z.mean), function(x) { 
         return(data.frame(K = x, circle(Z.mean[x, ], diameter = Z.var[x])))
@@ -147,7 +160,7 @@ plot_ERGMM <- function(file = "(an|se)[0-9]+", update = FALSE,
       mu = rbind.fill(mu)
   
       g = ggnet(Yg, mode = "geo", size = 0, geo.outliers = FALSE, arrow.size = 1/2) +
-        geom_point(aes(size = 9 + 3 * q, color = Yg %v% "party"), alpha = .5) +
+        geom_point(aes(size = 9 + Yg %v% "size", color = Yg %v% "party"), alpha = .5) +
         geom_point(aes(size = 9, color = Yg %v% "party"), alpha = 1) +
         geom_text(aes(size = 3, label = Z.K), color = "white", alpha = .5, fontface = "bold") +
         geom_path(data = mu, aes(group = factor(K), x = x, y = y), alpha = 2/3) +
@@ -160,14 +173,14 @@ plot_ERGMM <- function(file = "(an|se)[0-9]+", update = FALSE,
               legend.key.size = unit(28, "pt"),
               plot.margin = rep(unit(0, "mm"), 4)) +
         coord_equal()
-        # labs(y = expression(Z[2]), x = expression(Z[1]))
-
+      # labs(y = expression(Z[2]), x = expression(Z[1]))
+      
       ggsave(p, g, width = 11, height = 9)
       cat("done.\n")
 
       # table of node memberships
+      # togetherness = round(100 * apply(t, 1, max) / rowSums(t), 1)
       t = table(Yg %v% "party", Z.K)
-      t = cbind(t, togetherness = round(100 * apply(t, 1, max) / rowSums(t), 1))
 
       write.csv(t, row.names = TRUE, file = gsub(".rda", ".csv", i))
 
@@ -232,6 +245,8 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), base = FALSE, plot
   
   coefs = data.frame()       # plots
   betas = data.frame(b = NA) # table
+  bics = c()  # BICs
+  bbics = c() # baseline model BICs
 
   for(ch in c("se", "an")) {
 
@@ -254,6 +269,7 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), base = FALSE, plot
         else
           load(paste0("data/", file, ".rda"))
       
+        net = net13
         net %v% "female" = net %v% "sexe" == "F"
         net %v% "seniority" = net %v% "nb_mandats"
       
@@ -270,8 +286,8 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), base = FALSE, plot
             geom_vline(xintercept = q[ !is.infinite(q) ],
                        color = "grey25", linetype = "dashed")
 
-        net %n% "data" = paste(net %n% "data", "(sample edges)")
-        net %n% "edge_cutoff" = q
+        net %n% "data" = paste(net %n% "data", "within log-weight quantiles", cutoff[1], cutoff[2])
+        net %n% "edge_bounds" = q
                 
         q = which(w < q[1] | w > q[2])
 
@@ -310,7 +326,7 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), base = FALSE, plot
         print(net)
 
         ctrl = control.ergm(MCMLE.trustregion = 10^3,
-                            MCMLE.maxit = 100, seed = 3258)
+                            MCMLE.maxit = 100, seed = 3258) # tryin 200, 2357
 
         # Poisson-reference ERGM
         ERGM = ergm(net ~ edges + mutual + 
@@ -348,15 +364,21 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), base = FALSE, plot
             "nodematch.female" = "same: Gender",
             "absdiff.seniority" = "diff: Seniority",
             "absdiff.rightwing.1" = "diff: Left-Right",
-            "nodematch.party.FN"  = "single (positive) estimate, not shown",
+            "nodematch.party.FN"  = "Both FN",
             "nodematch.party.DRO" = "Both Conservatives",
             "nodematch.party.CEN" = "Both Centrists",
             "nodematch.party.RAD" = "Both Radicals",
             "nodematch.party.SOC" = "Both Socialists",
             "nodematch.party.COM" = "Both Communists",
-            "nodematch.party.ECO" = "single (positive) estimate, not shown")
+            "nodematch.party.ECO" = "Both Greens")
       f$b = b[ rownames(f) ]
   
+      # update BICs
+      bics = cbind(bics, summary(ERGM)[['bic']])
+
+      if(base)
+        bbics = cbind(bbics, summary(ERGM_base)[['bic']])
+      
       # update coefficients plot
       s = cbind(Chamber = chamber, Legislature = legid, Model = "Full", f)
       coefs = rbind(coefs, s)
@@ -389,13 +411,20 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), base = FALSE, plot
   }
 
   # order table rows
-  betas$b = factor(betas$b, levels = b[ !grepl("not shown", b)], ordered = TRUE)
+  betas$b = factor(betas$b, levels = b[ !grepl("not reported", b)], ordered = TRUE)
   betas = betas[ !is.na(betas$b) , ]
   betas = betas[ order(as.numeric(betas$b)), ]
 
   # save coefficients
   names(betas) = toupper(names(betas))
   names(betas) = gsub("(.*)_SE", "SE", names(betas))
+  bics = cbind(c("BIC (full model)", "BIC (baseline)"),
+               rbind(unlist(lapply(bics, c, "")),
+                     unlist(lapply(bbics, c, ""))
+                     )
+               )
+  betas = as.data.frame(rbind(as.matrix(betas), bics), row.names = NA, stringsAsFactors = FALSE)
+  betas[, -1] = apply(betas[, -1], 2, as.numeric)
   write.csv(betas, file = paste0("models/ergm/ergm_", cutoff[1], "_", cutoff[2], ".csv"))
 
   # reordering
@@ -406,42 +435,50 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), base = FALSE, plot
   # t-values
   names(coefs)[5] = "SE"
   coefs$t = coefs$SE / coefs$Estimate
-  coefs = subset(coefs, !is.na(b) & t < 1/2 & t > -1/2)
+  coefs = subset(coefs, !is.na(b) & abs(t) < 2/3) # drop Greens and FN (too few points) and v. large SEs
 
   # sort models
   coefs$Model = factor(coefs$Model, levels = c("Baseline", "Full"))
+
+  # sort chambers
+  coefs$Chamber = factor(coefs$Chamber, levels = c("Assemblée nationale", "Sénat"))
 
   # sort legislatures
   coefs$id = paste0(as.character(coefs$Legislature), substr(coefs$Model, 1, 1))
   coefs$id = factor(coefs$id, levels = unlist(lapply(8:14, paste0, c("B", "F"))))
 
-  g = qplot(data = subset(coefs, !grepl("Both|Edges", b)), x = id, y = Estimate, 
+  g = qplot(data = subset(coefs, !grepl("Both", b)),
+            x = id, y = Estimate, 
             ymin = Estimate - 3 * SE, ymax = Estimate + 3 * SE, group = b, geom = "pointrange") + 
+    scale_y_continuous(breaks = c(-6, -4, -2, -1, 0, 1, 2, 4, 6)) +
     geom_hline(yintercept = 0, linetype = "dashed", color = "grey75") +
     facet_grid(b ~ Chamber, scales = "free_y") +
-    labs(y = "Estimate\n", x = "\nLegislature") +
+    labs(y = "ERGM coefficient estimate ± 3 standard errors\n", x = "\nLegislature (1986-2014)") +
     coord_equal() +
     theme_grey(16) +
     theme(legend.position = "bottom",
-          panel.grid = element_blank(),
+          panel.grid = element_line(color = "white"),
           panel.background = element_rect(fill = "grey95"),
           strip.background = element_rect(fill = "grey85"),
           panel.margin = unit(.5, "cm"))
 
   if(base)
-    g = g + aes(color = Model) + scale_x_discrete(breaks = gsub("(.*)F", "", levels(coefs$id)),
-                                                  labels = gsub("\\D", "", levels(coefs$id)))
+    g = g + aes(color = Model) + 
+      scale_x_discrete(breaks = gsub("(.*)F", "", levels(coefs$id)),
+                       labels = gsub("\\D", "", levels(coefs$id))) # +
+      # scale_color_manual("Model", values = c("Full" = "black", "Baseline" = "grey50"))
   else
     g = g + scale_x_discrete(labels = sessions)
     
   ggsave(paste0("models/ergm/ergm_beta_", cutoff[1], "_", cutoff[2], ".pdf"),
-         g, width = 9, height = 9)
+         g, width = 9, height = 11)
     
   # differential homophily
   g = qplot(data = subset(coefs, Model == "Full" & grepl("Both", b)),
             x = Legislature, y = Estimate, color = b, group = b, 
             ymin = Estimate - 3 * SE, ymax = Estimate + 3 * SE,
             geom = "pointrange") + 
+    scale_y_continuous(breaks = c(0, 2, 4, 6)) +
     geom_pointrange(alpha = .5, color = "grey25") +
     geom_hline(yintercept = 0, linetype = "dashed", color = "grey75") +
     scale_color_manual("", values = c(
@@ -452,10 +489,10 @@ get_ERGM <- function(sessions = 8:14, cutoff = c(.025, .975), base = FALSE, plot
       "Both Conservatives" = "#377EB8" # (R; blue)
       )) +
     facet_grid(b ~ Chamber) +
-    labs(y = "Estimate\n", x = "\nLegislature") +
+    labs(y = "ERGM coefficient estimate ± 3 standard errors\n", x = "\nLegislature (1986-2014)") +
     theme_grey(16) +
     theme(legend.position = "none",
-          panel.grid = element_blank(),
+          panel.grid = element_line(color = "white"),
           panel.background = element_rect(fill = "grey95"),
           strip.background = element_rect(fill = "grey85"),
           panel.margin = unit(.5, "cm"))

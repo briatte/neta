@@ -452,7 +452,7 @@ get_gexf <- function(file = c("an", "se"), sessions = 8:14,
 #' by default.
 #' @author Tore Opsahl
 #' @source \url{http://toreopsahl.com/2010/04/21/article-node-centrality-in-weighted-networks-generalizing-degree-and-shortest-paths/}
-net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
+get_measures <- function(x, ch, update = FALSE, weights = "wpc") {
   
   file = paste0("measures/modularity/", ch, x, ".rda")
   chamber = ifelse(grepl("an", ch), "Assemblée nationale", "Sénat")
@@ -531,8 +531,6 @@ net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
     
     msg("Modularity:", round(modularity, 2),
         "over", n_distinct(V(inet)$party), "groups")
-
-    # V(inet)$name = V(inet)$nom ## if merging to nodes
     
     # maximized Walktrap (Waugh et al. 2009, arXiv:0907.3509, Section 2.3)
     walktrap = lapply(1:50, function(x) walktrap.community(inet, steps = x))
@@ -556,6 +554,7 @@ net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
   
   save(degree, modularity, walktrap, louvain, file = file)
   
+  modularity_max = max(c( modularity(walktrap), modularity(louvain) ))
   return(data.frame(chamber,
                     Legislature = x,
                     # unweighted graph-level
@@ -565,15 +564,11 @@ net_modularity <- function(x, ch, update = FALSE, weights = "wpc") {
                     # weighted graph-level
                     Centralization = net %n% "degree",
                     Distance = net %n% "distance",
-                    Clustering = net %n% "clustering",
+                    Global.Clustering = net %n% "clustering",
                     # maximized modularity
                     Modularity = modularity,
-                    Walktrap = modularity(walktrap),
-                    Louvain = modularity(louvain),
-                    # node-level measures
-                    Betweenness = mean(net %v% "betweenness", na.rm = TRUE),
-                    Closeness = mean(net %v% "closeness", na.rm = TRUE),
-                    Constraint = mean(net %v% "constraint", na.rm = TRUE),
+                    Modularity.Max = modularity_max,
+                    Modularity.Ratio = modularity / modularity_max,
                     stringsAsFactors = FALSE)
   )
   

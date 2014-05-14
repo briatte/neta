@@ -5,7 +5,7 @@ The `an` and `se` files hold cosponsored legislation and their corresponding net
 
 | chamber           | file | bills | amendments |
 |:------------------|:-----|:------|:-----------|
-| National Assembly | `an` | 4,670 | 60,048     |
+| National Assembly | `an` | 4,670 | 60,008     |
 | Senate            | `se` | 2,194 | 36,160     |
 
 Bills (and resolutions) were available in both chambers for the entire observation period. Senate amendments are available only from 2001 (legislature 11) to today, and National Assembly amendments from late 2004 (legislature 12) to today (legislature 14).
