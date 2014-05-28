@@ -13,7 +13,7 @@ install.packages('RPostgreSQL', type = 'source')
 library(RPostgreSQL)
 ```
 
-Running [`make.r`][makefile] will then try to rebuild the full network series after downloading all available data. The ~ 1.3 GB raw data (260 MB zipped) collected so far are not included in the repo but are available per request if you want to significantly speed up execution time and avoid network errors.
+Running [`make.r`][makefile] will then try to rebuild the full network series after downloading all available data. The ~ 1.3 GB raw data (260 MB zipped) collected so far are not included in the repo but are available per request if you want to significantly speed up execution time.
 
 The processed network data objects are saved as objects of class `network` to the `data` folder and exported to [GEXF](http://gexf.net/format/) (Gephi) format to the `app` folder. The `rda` data files also contain the complete, unsampled legislation and sponsorships, including government and single-authored bills.
 

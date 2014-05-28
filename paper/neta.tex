@@ -1,65 +1,13 @@
 
-\documentclass[12pt,a4paper]{article}\usepackage[]{graphicx}\usepackage[]{color}
-%% maxwidth is the original width if it is less than linewidth
-%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
-\makeatletter
-\def\maxwidth{ %
-  \ifdim\Gin@nat@width>\linewidth
-    \linewidth
-  \else
-    \Gin@nat@width
-  \fi
-}
-\makeatother
-
-\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
-\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
-\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
-\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
-\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
-\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
-\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
-\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
-\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
-\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
-
-\usepackage{framed}
-\makeatletter
-\newenvironment{kframe}{%
- \def\at@end@of@kframe{}%
- \ifinner\ifhmode%
-  \def\at@end@of@kframe{\end{minipage}}%
-  \begin{minipage}{\columnwidth}%
- \fi\fi%
- \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
- \colorbox{shadecolor}{##1}\hskip-\fboxsep
-     % There is no \\@totalrightmargin, so:
-     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
- \MakeFramed {\advance\hsize-\width
-   \@totalleftmargin\z@ \linewidth\hsize
-   \@setminipage}}%
- {\par\unskip\endMakeFramed%
- \at@end@of@kframe}
-\makeatother
-
-\definecolor{shadecolor}{rgb}{.97, .97, .97}
-\definecolor{messagecolor}{rgb}{0, 0, 0}
-\definecolor{warningcolor}{rgb}{1, 0, 1}
-\definecolor{errorcolor}{rgb}{1, 0, 0}
-\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
-
-\usepackage{alltt}
+\documentclass[12pt,a4paper]{article}
 %
 
 \input{preamble}
 
 
-
-
 \title{\large Network Patterns of Party Polarization \\ in the French Parliament}
 \author{\href{mailto:f.briatte@ed.ac.uk}{François Briatte}}
 \date{\today}
-\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 
 \begin{document}
 
@@ -106,18 +54,18 @@
   \centering
 
   \begin{subfigure}[t]{.8\textwidth}
-    \includegraphics[width=\textwidth]{../plots/counts/full_an.pdf}
+    \includegraphics[width=\textwidth]{figures/counts/full_an.pdf}
     \sublegend{National Assembly}%
     \label{fig:counts_an}
   \end{subfigure}
 
   \begin{subfigure}[t]{.8\textwidth}
-    \includegraphics[width=\textwidth]{../plots/counts/full_se.pdf}
+    \includegraphics[width=\textwidth]{figures/counts/full_se.pdf}
     \sublegend{Senate}%
     \label{fig:counts_se}
   \end{subfigure}
 
-  \legend{Time distributions of amendments and bills, colored by sponsorships.}
+  \legend{Time distributions of amendments and bills, colored by sponsorships.}%
   \label{fig:counts}
 \end{figure}
 
@@ -140,7 +88,7 @@
     \label{tbl:counts_se}
   \end{subtable}
 
-  \legend{Total counts of amendments, bills, unique party groups and MP sponsors over legislatures 8--14 (1986-2014).}
+  \legend{Total counts of amendments, bills, unique party groups and MP sponsors over legislatures 8--14 (1986-2014).}%
   \label{tbl:counts}
 \end{table}
 
@@ -151,7 +99,7 @@
 \begin{figure}[htbp]
   \centering
 
-  \includegraphics[width=\textwidth]{../plots/measures/full.pdf}
+  \includegraphics[width=\textwidth]{figures/measures/full.pdf}
 
   \legend{Graph-level properties of the cosponsorship networks. Estimates that include amendments in addition to bills are shown with dots. Legislature 10 of the National Assembly is shown as a grey dot due to very sparse network data.}%
   \label{fig:measures}
@@ -191,13 +139,13 @@
   \centering
 
   \begin{subfigure}[t]{.8\textwidth}
-    \includegraphics[width=\textwidth]{../plots/an8_ergmm.pdf}
+    \includegraphics[width=\textwidth]{figures/an8_ergmm.pdf}
     \sublegend{Latent space positions}%
     \label{fig:an8_ergmm}
   \end{subfigure}
 
   \begin{subfigure}[t]{.8\textwidth}
-    \includegraphics[width=\textwidth]{../plots/an8.pdf}
+    \includegraphics[width=\textwidth]{figures/an8.pdf}
     \sublegend{Force-directed graph}%
     \label{fig:an8}
   \end{subfigure}
@@ -214,13 +162,13 @@
   \centering
 
   \begin{subfigure}[t]{.8\textwidth}
-    \includegraphics[width=\textwidth]{../plots/se14_ergmm.pdf}
+    \includegraphics[width=\textwidth]{figures/se14_ergmm.pdf}
     \sublegend{Latent space positions}%
     \label{fig:ergmm_se14}
   \end{subfigure}
 
   \begin{subfigure}[t]{.8\textwidth}
-    \includegraphics[width=\textwidth]{../plots/se14.pdf}
+    \includegraphics[width=\textwidth]{figures/se14.pdf}
     \sublegend{Force-directed graph}%
     \label{fig:se14}
   \end{subfigure}
@@ -236,15 +184,7 @@
 \begin{figure}[htbp]
   \centering
 
-
-
-{\centering \includegraphics[width=\textwidth,height=\textwidth]{../models/ergmm/fm} 
-
-}
-
-
-
-
+  \includegraphics[width=\textwidth]{figures/fm.pdf}
 
   \legend{Fowlkes-Mallows indices for the latent cluster random effects models.}%
   \label{fig:fm}
@@ -257,7 +197,7 @@
 \begin{figure}[htbp]
   \centering
 
-  \includegraphics[width=\textwidth]{../models/ergm/{ergm_beta_0.025_0.975}.pdf}
+  \includegraphics[width=\textwidth]{figures/ergm_cov.pdf}
 
   \legend{ERGM coefficients for all legislatures. Full model coefficients are net of the within-party homophily effects reported in Figure~\ref{fig:ergm_diff}. Estimates are not shown when their standard error exceeds two thirds of their magnitude.}%
   \label{fig:ergm_beta}
@@ -270,7 +210,7 @@
 \begin{figure}[htbp]
   \centering
 
-  \includegraphics[width=\textwidth]{../models/ergm/{ergm_diff_0.025_0.975}.pdf}
+  \includegraphics[width=\textwidth]{figures/ergm_diff.pdf}
 
   \legend{ERGM within-party homophily coefficients for all legislatures. All coefficients are net of the covariate effects reported in Figure~\ref{fig:ergm_beta} and are not shown when their standard error exceeds two thirds of their magnitude. Only one point estimate was initially measured for Radicals in the National Assembly.}%
   \label{fig:ergm_diff}
@@ -280,13 +220,13 @@
 
 % TBL. 4
 
-\input{tables/an_ergm}
+\input{tables/ergm_an}
 
 \clearpage
 
 % TBL. 5
 
-\input{tables/se_ergm}
+\input{tables/ergm_se}
 
 %   \centering
 %   \footnotesize{Typeset on \today~with \TeX{} and \href{http://yihui.name/knitr/}{\texttt{knitr}} in \href{http://rstudio.org/}{RStudio}, \\ using the \emph{Political Analysis} style by Jonathan N. Katz.}
