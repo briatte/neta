@@ -56,7 +56,7 @@
           <li>scrape amendments, bills and resolutions from the <a href="http://www.assemblee-nationale.fr/" title="Assemblée nationale">Assemblée nationale</a>,</li>
           <li>extract similar data out of the SQL databases from the <a href="http://data.senat.fr/">Sénat open data portal</a>, and</li>
           <li>build each parliamentary legislature since 1986 into a <a href="http://jhfowler.ucsd.edu/cosponsorship.htm">cosponsorship network</a>, and
-          <li>estimate party polarization in each legislature using a <a href="http://www.stat.washington.edu/raftery/Research/latentnet.html">latent space model</a>.
+          <li>estimate party polarization in each legislature using <a href="http://people.maths.ox.ac.uk/porterm/papers/modularity_jop.pdf">modularity</a> and <a href="http://people.umass.edu/bruced/pubs/Desmarais_Cranmer_PhysA2012.pdf">exponential random graph models</a>.
         </ol>
     
         <p style="margin-top:2em;">The code and data live at <a href="https://github.com/briatte/neta">github.com/briatte/neta</a>.</p>
@@ -204,7 +204,7 @@
         </tr>
       </table>
       
-      <p><small>Two-dimensional <a href="http://www.stat.washington.edu/raftery/Research/latentnet.html">latent space cluster models</a> with random sender/receiver effects, using the same number of groups as there were parliamentary groups in the legislature. Unfilled circles indicate cluster means and variance, and node size is proportional to likelihood of cluster membership.</small></p>
+      <p><small>Two-dimensional <a href="http://www.stat.washington.edu/raftery/Research/latentnet.html">latent space cluster models</a> with <a href="https://www.sciencedirect.com/science/article/pii/S0378873309000173">random sender/receiver effects</a>, using the same number of groups as there were parliamentary groups in the legislature. Unfilled circles indicate cluster means and variance, and node size is proportional to likelihood of cluster membership.</small></p>
       
     </article>
     
