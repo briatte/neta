@@ -39,6 +39,10 @@ get_data("an")
 get_networks(8:14, file = "an", export = TRUE) # National Assembly
 get_networks(8:14, file = "se", export = TRUE) # Senate
 
+# network models
+get_models("ergmm" , sessions = 8:14) # latent space clustering
+get_models("ergm"  , sessions = 8:14) # homophily fixed effects
+
 # zip raw data
 zip_files(verbose = TRUE)
 
