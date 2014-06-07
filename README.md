@@ -3,7 +3,7 @@
 
 ![](preview.png)
 
-> See an [interactive visualization](http://briatte.org/sigma/) of the results, or read the draft documentation:
+> See an [interactive visualization](http://briatte.org/neta/) of the results, or read the draft documentation:
 
 * [replication instructions](HOWTO.md)
 * [data codebooks](data/README.md)
