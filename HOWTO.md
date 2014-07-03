@@ -38,10 +38,16 @@ One way to get the databases if you have a TeX distribution installed is to knit
 
 ## Other functions
 
-The few functions that are not run in [`make.r`][makefile] can be run separately, such as `weighted_degree` to export centrality rankings at different values of the node weighting parameter, using code from [Tore Opsahl][to]:
+The few functions that are not run in [`make.r`][makefile] can be run separately, such as `get_measures` to export centrality rankings at different values of the node weighting parameter, using code from [Tore Opsahl][to], along with network modularity scores:
 
 ```{S}
-weighted_degree('models/degree')
+get_measures(8:14, "an")
+get_measures(10.1, "se") # divided government, 1993-1995
+get_measures(10.2, "an") # unified government, 1995-1997
+get_measures(10.2, "se") # unified government, 1995-1997
+# time-split networks
+lapply(str_extract(dir("data", pattern = "[0-9]{4}.rda"), "\\d+\\.\\d+"), get_measures, ch = "an")
+lapply(str_extract(dir("data", pattern = "[0-9]{4}.rda"), "\\d+\\.\\d+"), get_measures, ch = "se")
 ```
 
 [jf]: http://jhfowler.ucsd.edu/cosponsorship.htm

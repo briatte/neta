@@ -393,7 +393,7 @@ get_dosleg <- function(file = "data/bi_se.rda", sql,
     # select Senator bills
     bills = get_sql("select texcod, sesann, txtoritxtdat, texnum, texurl from texte where sesann > 1985 and typtxtcod = '1'", sqlb)
 
-    bills = filter(bills, texcod %in% unique(sponsorships$uid))
+    bills = subset(bills, texcod %in% unique(sponsorships$uid))
 
     msg("Parsing:", n_distinct(bills$texcod), "bills")
 

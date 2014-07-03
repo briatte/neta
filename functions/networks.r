@@ -5,6 +5,8 @@
 get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = FALSE) {
   
   file = gsub(".rda", "", file)
+  if(nchar(file) < 3)
+    get_data(file)
   
   if(plot)
     plot_data(file, verbose = verbose)
@@ -12,30 +14,50 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
   load(paste0("data/", file, ".rda"))
   
   master = get(ls(pattern = "amendments|bills|legislation"))
+  master$year = year(master$date)
   stopifnot(exists("master"))
   
+  if(sessions == "yr")
+    sessions = apply(expand.grid(8:14, 1986:2014), 1, paste0, collapse = ".")
+  
+  if(10 %in% sessions & file %in% c("an", "se")) # for merged series only,
+    sessions = c(sessions, 10.2) # get unified government (no data for divided government)
+  
+  if(10 %in% sessions & file == "se") # for merged Senate series only,
+    sessions = c(sessions, 10.1, 10.2) # get divided and unified governments
+  
   for(i in sessions) {
+    
+    if(i == as.integer(i))
+      edges = subset(master, legislature == i & !government & sample)$uid
+    else if(i == 10.1) # 1993-1995, leftwing weakly divided
+      edges = subset(master, legislature == 10 & date < as.Date("1995-04-23") & !government & sample)$uid
+    else if(i == 10.2) # 1995-1997, rightwing strongly unified
+      edges = subset(master, legislature == 10 & date > as.Date("1995-04-23") & !government & sample)$uid
+    else {
+      y = as.numeric(str_pad(gsub("\\d+\\.(\\d+)", "\\1", i), width = 4, side = "right", pad = "0"))
+      edges = subset(master, legislature == as.integer(i) & year == y & !government & sample)$uid
+    }
+    
+    #     if(exists("legislation") & length(edges))
+    #       print(with(master[ master$uid %in% edges, ], table(type, legislature)))
+    
+    edges = subset(sponsorships, uid %in% edges)
+    #     message(paste(i, y, nrow(edges)))
     
     data = file
     
     # append bills-only datasets for National Assembly
-    if((file == "an") & (i < 12))
+    if((file == "an") & (as.integer(i) < 12))
       data = paste0("bi_", data)
     
     # append bills-only datasets for Senate
-    if((file == "se") & (i < 11))
+    if((file == "se") & (as.integer(i) < 11))
       data = paste0("bi_", data)
     
     data = paste0("data/", data, i, ".rda")
     
-    if(!file.exists(data)) {
-      
-      edges = filter(master, legislature == i, !government, sample)$uid
-      
-      if(exists("legislation"))
-        print(with(master[ master$uid %in% edges, ], table(type, legislature)))
-      
-      edges = subset(sponsorships, uid %in% edges)
+    if(!file.exists(data) & nrow(edges) > 0) {
       
       au = table(edges$name[ edges$status == "author" ])
       co = table(edges$name[ edges$status == "cosponsor" ])
@@ -45,7 +67,7 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
       edges = net[["edges"]]
       net = net[["network"]]
       
-      nodes = sponsors[ sponsors$legislature == i & sponsors$nom %in% network.vertex.names(net), ]
+      nodes = sponsors[ sponsors$legislature == as.integer(i) & sponsors$nom %in% network.vertex.names(net), ]
       
       # find missing sponsors
       unknown = !network.vertex.names(net) %in% nodes$nom
@@ -165,7 +187,7 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
       if(verbose)
         msg("Saved:", data, file_size(data))
       
-    } else {
+    } else if(file.exists(data) & nrow(edges) > 0) {
       
       load(data)
       
@@ -174,29 +196,54 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
       
     }
     
-    # prepare plot
-    v = net %n% "party_colors"
-    b = net %n% "party_order"
+    if(nrow(edges) > 0) {
+      
+      assign(paste0("net", i), net)
+      assign(paste0("edges", i), edges)
+      assign(paste0("nodes", i), nodes)
+      get_measures(i, ch = file, update = FALSE)
+      
+    }
     
-    # color edges by source node
-    g = suppressMessages(ggnet(net, 
-                               node.group = net %v% "party", node.color = net %n% "party_colors",
-                               segment.color = factor(colors[ nodes[ net %e% "source", "party" ] ]),
-                               node.alpha = .75, segment.alpha = .5, size = 6) +
-                           scale_color_manual("", values = v, breaks = b) +
-                           theme(text = element_text(size = 28),
-                                 legend.key = element_rect(colour = "white", fill = NA),
-                                 legend.key.size = unit(28, "pt")))
-    
-    # save plot
-    ggsave(paste0("plots/", file, i, ".pdf"), width = 11, height = 9)
-    
-    # rename objects
-    assign(paste0("ggnet", i), g)
-    assign(paste0("net", i), net)
-    assign(paste0("colors", i), v)
-    assign(paste0("edges", i), edges)
-    assign(paste0("nodes", i), nodes)
+    plot = paste0("plots/", gsub("data/(.*).rda", "\\1", data), ".pdf")
+    if(!file.exists(plot) & nrow(edges) > 0) {
+      
+      if(verbose)
+        msg("Plotting:", gsub("data/(.*).rda", "\\1", data), nrow(edges), "edges")
+      
+      # prepare plot
+      v = net %n% "party_colors"
+      b = net %n% "party_order"
+      
+      # net %v% "size" = as.numeric(factor(quantile(net %v% "degree", c(0, .5, 1))))
+      # small = 3 + net %v% "size"
+      # large = 6 + net %v% "size"
+
+      del = which(is.na(net %v% "closeness"))
+      # msg("Dropping:", length(del), "nodes from graph")
+      network::delete.vertices(net, del)
+      
+      # color edges by source node
+      g = suppressMessages(ggnet(net,
+                                 segment.color = factor(colors[ nodes[ net %e% "source", "party" ] ]),
+                                 segment.alpha = .5,
+                                 node.group = net %v% "party", node.color = net %n% "party_colors",
+                                 size = 0) +
+                             scale_color_manual("", values = v, breaks = b) +
+                             geom_point(size = 9, alpha = 1/3) +
+                             geom_point(size = 6, alpha = 1/2) +
+                             theme(text = element_text(size = 28),
+                                   legend.key = element_rect(colour = "white", fill = NA),
+                                   legend.key.size = unit(28, "pt")))
+      
+      # save plot
+      ggsave(plot, g, width = 11, height = 9)
+      
+#       # rename objects
+#       assign(paste0("ggnet", i), g)
+#       assign(paste0("colors", i), v)
+
+    }
     
   }
   
@@ -209,9 +256,9 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
     msg("Saved:", data, file_size(data))
   
   # export to GEXF
-  if(nchar(file) < 3 | export)
-    get_gexf(file)       
-  
+  if(nchar(file) < 3 & export)
+    get_gexf(file)     
+    
 }
 
 #' Create a weighted directed edge list from first authors to cosponsors
@@ -397,7 +444,7 @@ get_gexf <- function(file = c("an", "se"), sessions = 8:14,
       people = data.frame(id = as.numeric(factor(people$nom)),
                           label = people$nom,
                           stringsAsFactors = FALSE)      
-            
+      
       relations = data.frame(
         source = as.numeric(factor(net %e% "source", levels = levels(factor(people$label)))),
         target = as.numeric(factor(net %e% "target", levels = levels(factor(people$label)))),
@@ -425,7 +472,7 @@ get_gexf <- function(file = c("an", "se"), sessions = 8:14,
       
       # strong ties (upper quartile)
       q = (relations[, 3] >= quantile(relations[, 3], .75))
-
+      
       file = paste0("app/", j, i, ".gexf")
       write.gexf(nodes = people,
                  edges = relations[, -3],
@@ -458,13 +505,14 @@ get_measures <- function(x, ch, update = FALSE, weights = "wpc") {
   chamber = ifelse(grepl("an", ch), "Assemblée nationale", "Sénat")
   
   data = paste0("data/", ch, x, ".rda")
+
   if(file.exists(data))
     load(data)
   else
     load(paste0("data/bi_", ch, x, ".rda"))
   
   msg("Network:", chamber, "legislature", x)
-
+  
   # weighted adjacency matrix to tnet
   tnet = as.tnet(as.sociomatrix(net, attrname = weights), type = "weighted one-mode tnet")
   
@@ -513,17 +561,21 @@ get_measures <- function(x, ch, update = FALSE, weights = "wpc") {
       s[ s == "ECO" ] = "SOC"
     if(sum(s == "COM", na.rm = TRUE) < 10 & any(s == "COM"))
       s[ s == "COM" ] = "SOC"
-
+    if(sum(s == "RAD", na.rm = TRUE) < 10 & any(s == "RAD"))
+      s[ s == "RAD" ] = "SOC"
+    if(sum(s == "CEN", na.rm = TRUE) < 10 & any(s == "CEN"))
+      s[ s == "CEN" ] = "DRO"
+    
     # drop unaffiliated sponsors
     s = ifelse(s == "SE", NA, s)
     
     # get MP parliamentary groups
     names(s) = network.vertex.names(net)
-  
+    
     # subset to nonmissing groups
     V(inet)$party = factor(s[ V(inet)$name ])
     print(table(V(inet)$party, exclude = NULL))
-
+    
     inet = inet - which(is.na(V(inet)$party))
     
     # modularity

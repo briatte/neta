@@ -47,7 +47,7 @@
   else
     $caption = '<p>This graph shows French Senators during the ' . $page . 'th&nbsp;legislature. A link between two Senators indicates that they have cosponsored at least one amendment, bill or resolution.';
 
-  $caption = $caption . ' Their size is proportional to their <a href="http://toreopsahl.com/tnet/weighted-networks/node-centrality/">weighted degree</a>.</p>'
+  $caption = $caption . ' Their size is proportional to their <a href="http://toreopsahl.com/tnet/weighted-networks/node-centrality/">weighted degree</a>. See <a href="plots.html">this page</a> for more plots.</p>'
 ?>
 
 <!doctype html>
@@ -64,12 +64,12 @@
   </title>
   <meta charset="utf-8">
   <link href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600" rel="stylesheet" type="text/css" />
-  <link href="assets/styles.css" rel="stylesheet" type="text/css" />
-  <link rel="stylesheet" href="font-awesome-4.0.3/css/font-awesome.min.css">
+  <link href="/assets/styles.css" rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="/font-awesome-4.0.3/css/font-awesome.min.css">
   <style type="text/css" media="screen">
   html, body {
     font: 24px/150% "Source Sans Pro", sans-serif;
-    background-image: url("assets/hemicycle_<?php echo $ch; ?>.jpg");
+    background-image: url("/assets/hemicycle_<?php echo $ch; ?>.jpg");
     color: #fff;
     margin: 0;
     padding:0;
@@ -78,7 +78,7 @@
   }
   </style>
   <!--[if lt IE 8]>
-    <link rel="stylesheet" href="assets/stylesheets/social_foundicons_ie7.css">
+    <link rel="stylesheet" href="/assets/stylesheets/social_foundicons_ie7.css">
   <![endif]-->
 </head>
 <body>
@@ -87,7 +87,7 @@
   <div id="controls" class="bg_<?php echo $ch; ?>">
     <h1>cosponsorship networks</h1>    
     <h2><a href="<?php if($ch=="an") echo "http://assemblee-nationale.fr/"; else echo "http://senat.fr/"; ?>" title="<?php echo $chamber; ?>">
-           <img src="assets/logo_<?php echo $ch; ?>.png" height="25" alt="logo">
+           <img src="/assets/logo_<?php echo $ch; ?>.png" height="25" alt="logo">
         </a>&nbsp;<?php echo $chamber . ", " . $array[ $page ]; if($ch=="se") echo "<br>&nbsp;"; ?></h2>
 
     <p>Chamber&nbsp;&nbsp;
@@ -141,7 +141,7 @@
     <footer>
       <p>Inspired by <a href="http://coulmont.com/blog/2011/09/02/travail-de-deputes/">Baptiste&nbsp;Coulmont</a> and <a href="http://jhfowler.ucsd.edu/cosponsorship.htm">James&nbsp;Fowler</a>, built with <a href="http://gexf.net/format/" title="GEXF file format (Gephi)">GEXF</a>, <a href="http://www.r-project.org/" title="The R Project for Statistical Computing">R</a> and <a href="http://sigmajs.org/" title"JavaScript library dedicated to graph drawing">sigma.js</a>. 
       Background photo by <?php if($ch == "an") echo "<a href='http://commons.wikimedia.org/wiki/File:Panorama_de_l%27h%C3%A9micyle_de_l%27assembl%C3%A9e_nationale.jpg' title='Original photograph by Richard Ying and Tangui Morlier'>Richard Ying and Tangui Morlier"; else echo "<a href='https://commons.wikimedia.org/wiki/File:L%27h%C3%A9micycle_du_S%C3%A9nat_fran%C3%A7ais_en_septembre_2009.jpg' title='Original photograph by Romain Vincens'>Romain Vincens"; ?></a> (Wikimedia).</p>
-        <p><a href="http://twitter.com/share?text=Cosponsorship%20networks%20in%20the%20French%20Parliament,%20by%20@phnk:&amp;url=<?php echo 'http://' . $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"]; ?>" class="button" title="Share this page on Twitter."><i class="fa fa-twitter"></i> Tweet</a>&nbsp;&nbsp;<a href="https://github.com/briatte/neta" class="button" title="Get the code and data from GitHub."><i class="fa fa-github"></i> Code</a></p>
+      <p><a href="http://twitter.com/share?text=Cosponsorship%20networks%20in%20the%20French%20Parliament,%20by%20@phnk:&amp;url=<?php echo 'http://' . $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"]; ?>" class="button" title="Share this page on Twitter."><i class="fa fa-twitter"></i> Tweet</a>&nbsp;&nbsp;<a href="https://github.com/briatte/neta" class="button" title="Get the code and data from GitHub."><i class="fa fa-github"></i> Code</a></p>
     </footer>
     <div id="graph-container"></div>
   </div>
@@ -151,9 +151,9 @@
 
 </div>
 
-<script src="sigmajs-release-v1.0.2/sigma.min.js"></script>
-<script src="sigmajs-release-v1.0.2/plugins/sigma.parsers.gexf.min.js"></script>
-<script src="sigmajs-release-v1.0.2/plugins/sigma.layout.forceAtlas2.min.js"></script>
+<script src="/sigmajs-release-v1.0.2/sigma.min.js"></script>
+<script src="/sigmajs-release-v1.0.2/plugins/sigma.parsers.gexf.min.js"></script>
+<script src="/sigmajs-release-v1.0.2/plugins/sigma.layout.forceAtlas2.min.js"></script>
 
 <script>
 function decimalAdjust(type, value, exp) {

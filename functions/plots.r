@@ -455,14 +455,22 @@ plot_groups <- function(sessions = 8:14) {
 #' @keywords paper
 plot_attributes <- function(type = "all", sessions = 8:14) {
   
+  if(sessions == "yr") {
+
+    sessions = dir("data", pattern = "(an|se)[0-9]{1,2}.[0-9]{4}.rda")
+    sessions = table(str_extract(sessions, "\\d+\\.\\d+"))
+    sessions = names(sessions)[ sessions > 1 ]
+
+  }
+  
   type = ifelse(type == "all", "", paste0(type, "_"))
   se = rbind.fill(lapply(sessions, get_measures, ch = paste0(type, "se")))
   an = rbind.fill(lapply(sessions, get_measures, ch = paste0(type, "an")))
   da = melt(rbind(an, se), c("chamber", "Legislature"))
 
   # mark amendments series
-  dots_an = subset(da, chamber == "Assemblée nationale" & Legislature > 11)
-  dots_se = subset(da, chamber == "Sénat" & Legislature > 10)
+  dots_an = subset(da, chamber == "Assemblée nationale" & as.integer(Legislature) > 11)
+  dots_se = subset(da, chamber == "Sénat" & as.integer(Legislature) > 10)
 
   # mark A10 as faulty
   da$faulty = with(da, chamber == "Assemblée nationale" & Legislature == 10 & variable %in% c("Centralization", "Distance", "Global.Clustering", "Modularity", "Modularity.Max", "Modularity.Ratio", "Betweenness", "Local.Clustering", "Constraint"))
