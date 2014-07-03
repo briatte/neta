@@ -10,10 +10,6 @@ packages = c("animation", "coda", "downloader", "ergm", "ggmap", "ggmcmc",
              "ggplot2", "grid", "latentnet", "lubridate", "network", "plyr", 
              "RColorBrewer", "reshape", "rgexf", "rjson", "RPostgreSQL",
              "scales", "sna", "stringr", "tnet", "XML", "xtable", "dplyr")
-packages = c("animation", "coda", "downloader", "ergm", "ggmap", "ggmcmc",
-            "ggplot2", "grid", "latentnet", "lubridate", "network", "plyr", 
-            "RColorBrewer", "reshape", "rgexf", "rjson", "RPostgreSQL",
-            "scales", "sna", "stringr", "tnet", "XML", "xtable", "dplyr")
 
 # install-and-load
 packages = lapply(packages, function(x) {

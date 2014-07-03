@@ -38,10 +38,10 @@ get_networks(8:14, file = "an", export = FALSE)  # National Assembly
 get_networks(8:14, file = "se", export = FALSE)  # Senate
 get_models("ergm") # bootstrapped TERGM
 
-# network model, estimated over legislature-years
-get_networks("yr", file = "an", verbose = TRUE)  # National Assembly
-get_networks("yr", file = "se", verbose = FALSE) # Senate
-get_models("ergm") # bootstrapped TERGM
+# # network model, estimated over legislature-years
+# get_networks("yr", file = "an", verbose = TRUE)  # National Assembly
+# get_networks("yr", file = "se", verbose = FALSE) # Senate
+# get_models("ergm") # bootstrapped TERGM
 
 # # zip raw data
 # zip_files(verbose = TRUE)

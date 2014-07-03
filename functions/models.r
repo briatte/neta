@@ -279,16 +279,47 @@ get_TERGM <- function(ch, sessions = 8:14, nboot = 1000) {
   
   stopifnot(ch %in% c("an", "se"))
 
-  if(sessions == "yr") {
+  if(sessions[1] == "yr") {
     
     suffix = "_yr"
     sessions = dir("data", pattern = "(an|se)[0-9]{1,2}.[0-9]{4}.rda")
     sessions = table(str_extract(sessions, "\\d+\\.\\d+"))
     sessions = names(sessions)[ sessions > 1 & names(sessions) != "8.1988" ]
     sessions = sessions[ order(as.numeric(sessions)) ]
+
+  } else if(sessions[1] == "yr_un") {
     
-  }
-  else if(is.character(sessions)) {
+    suffix = "_yr_un"
+    sessions = dir("data", pattern = "(an|se)[0-9]{1,2}.[0-9]{4}.rda")
+    sessions = table(str_extract(sessions, "\\d+\\.\\d+"))
+    sessions = names(sessions)[ sessions > 1 & grepl("10.1997|(9|12|13|14)\\.", names(sessions)) ]
+    sessions = sessions[ order(as.numeric(sessions)) ]
+    
+  } else if(sessions[1] == "yr_di") {
+    
+    suffix = "_yr_di"
+    sessions = dir("data", pattern = "(an|se)[0-9]{1,2}.[0-9]{4}.rda")
+    sessions = table(str_extract(sessions, "\\d+\\.\\d+"))
+    sessions = names(sessions)[ sessions > 1 & grepl("8\\.1986|8\\.1987|11\\.", names(sessions)) ]
+    sessions = sessions[ order(as.numeric(sessions)) ]
+
+  } else if(sessions[1] == "yr_lw") {
+    
+    suffix = "_yr_lw"
+    sessions = dir("data", pattern = "(an|se)[0-9]{1,2}.[0-9]{4}.rda")
+    sessions = table(str_extract(sessions, "\\d+\\.\\d+"))
+    sessions = names(sessions)[ sessions > 1 & grepl("(9|11|14)\\.", names(sessions)) ]
+    sessions = sessions[ order(as.numeric(sessions)) ]
+    
+  } else if(sessions[1] == "yr_rw") {
+
+    suffix = "_yr_rw"
+    sessions = dir("data", pattern = "(an|se)[0-9]{1,2}.[0-9]{4}.rda")
+    sessions = table(str_extract(sessions, "\\d+\\.\\d+"))
+    sessions = names(sessions)[ sessions > 1 & grepl("8\\.1986|8\\.1987|10\\.1997|1(2|3)\\.", names(sessions)) ]
+    sessions = sessions[ order(as.numeric(sessions)) ]
+    
+  } else if(is.character(sessions[1])) {
 
     stopifnot(length(sessions) == 1 & sessions %in% c("lw", "rw", "di", "un"))
     suffix = paste0("_", sessions)
