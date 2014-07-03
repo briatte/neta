@@ -27,23 +27,23 @@ get_senateurs(          sessions =  1:14) # sponsors
 get_dosleg(sql = sqlb , sessions =  8:14) # bills
 get_ameli(sql = sqla  , sessions = 11:14) # amendments
 
-# legislation networks
-get_networks(  8:14 , file = "bi_an") # National Assembly bills
-get_networks( 12:14 , file = "am_an") # National Assembly amendments
-get_networks(  8:14 , file = "bi_se") # Senate bills
-get_networks( 11:14 , file = "am_se") # Senate amendments
+# # split series networks
+# get_networks(  8:14 , file = "bi_an") # National Assembly bills
+# get_networks( 12:14 , file = "am_an") # National Assembly amendments
+# get_networks(  8:14 , file = "bi_se") # Senate bills
+# get_networks( 11:14 , file = "am_se") # Senate amendments
 
-# merged series
-get_data("se")
-get_data("an")
-get_networks(8:14, file = "an", export = TRUE) # National Assembly
-get_networks(8:14, file = "se", export = TRUE) # Senate
+# network model, estimated over legislatures
+get_networks(8:14, file = "an", export = FALSE)  # National Assembly
+get_networks(8:14, file = "se", export = FALSE)  # Senate
+get_models("ergm") # bootstrapped TERGM
 
-# network models
-get_models("ergmm" , sessions = 8:14) # latent space clustering
-get_models("ergm"  , sessions = 8:14) # homophily fixed effects
+# network model, estimated over legislature-years
+get_networks("yr", file = "an", verbose = TRUE)  # National Assembly
+get_networks("yr", file = "se", verbose = FALSE) # Senate
+get_models("ergm") # bootstrapped TERGM
 
-# zip raw data
-zip_files(verbose = TRUE)
+# # zip raw data
+# zip_files(verbose = TRUE)
 
 # have a nice day

@@ -342,7 +342,7 @@ get_TERGM <- function(ch, sessions = 8:14, nboot = 1000) {
         if(sum(s == "CEN", na.rm = TRUE) < 10 & any(s == "CEN"))
           s[ s == "CEN" ] = "DRO"
         if(sum(s == "FN", na.rm = TRUE) < 10 & any(s == "FN"))
-          s[ s == "FN" ] = NA
+          s[ s == "FN" ] = "SE"
         
         # mark unaffiliated sponsors as missing
         net %v% "party" = ifelse(s == "SE", NA, s)
