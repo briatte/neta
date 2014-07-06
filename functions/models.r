@@ -1,5 +1,8 @@
-#' Makefile call
+#' Run bootstrapped TERGMs, by legislature and by legislature-year
 #'
+#' The models are run over leftwing/rightwing and divded/unified government
+#' configuration
+#' @param sessions 8:14 or any fragment of that, or "yr" for the split-year series
 get_models <- function(key, sessions = 8:14) {
   
   if(key == "ergmm") {
@@ -10,24 +13,33 @@ get_models <- function(key, sessions = 8:14) {
 
   } else if(key == "ergm") {
     
+    # full series models, by year or by legislature
     get_TERGM(ch = "an", sessions, nboot = 1000)
     get_TERGM(ch = "se", sessions, nboot = 1000)
 
-    if(sessions == 8:14) {
-      
-      # leftwing/rightwing, divided/unified (for full series only)
-      for(j in c("lw", "rw", "di", "un")) {
+    # leftwing/rightwing and divided/unified models
+    for(j in c("lw", "rw")) { # , "di", "un"
 
-        get_TERGM(ch = "se", sessions = j, nboot = 1000)
-        get_TERGM(ch = "an", sessions = j, nboot = 1000)
-
-      }
-      
-      plot_TERGM("models/ergm.csv", key = "rw")
-      plot_TERGM("models/ergm.csv", key = "di")
+      if(sessions[1] == "yr") j = paste0("yr_", j)
+      get_TERGM(ch = "se", sessions = j, nboot = 1000)
+      get_TERGM(ch = "an", sessions = j, nboot = 1000)
 
     }
 
+    if(sessions[1] == "yr") {
+      
+      # legislature-year level
+      plot_TERGM("models/ergm_yr_rw.csv", key = "yr_rw")
+      plot_TERGM("models/ergm_yr_di.csv", key = "yr_di")
+      
+    } else {
+
+      # legislature level
+      plot_TERGM("models/ergm_rw.csv", key = "rw")
+#       plot_TERGM("models/ergm_di.csv", key = "di")
+      
+    }
+    
   }
 
 }
@@ -324,10 +336,10 @@ get_TERGM <- function(ch, sessions = 8:14, nboot = 1000) {
     stopifnot(length(sessions) == 1 & sessions %in% c("lw", "rw", "di", "un"))
     suffix = paste0("_", sessions)
     
-    if(sessions == "rw") sessions = c(8, 10.2, 12:13)  # rightwing government
-    if(sessions == "lw") sessions = c(9, 11, 14)       # leftwing government
-    if(sessions == "di") sessions = c(8, 11)           # divided government (missing 10.1)
-    if(sessions == "un") sessions = c(9, 10.2, 12:14)  # unified government
+    if(sessions[1] == "rw") sessions = c(8, 10.2, 12:13)  # rightwing government
+    if(sessions[1] == "lw") sessions = c(9, 11, 14)       # leftwing government
+    if(sessions[1] == "di") sessions = c(8, 11)           # divided government (missing 10.1)
+    if(sessions[1] == "un") sessions = c(9, 10.2, 12:14)  # unified government
 
   } else {
 
@@ -339,11 +351,11 @@ get_TERGM <- function(ch, sessions = 8:14, nboot = 1000) {
   message(paste("Model:", data), " legislatures ", paste0(sessions, collapse = ", "))
   
   if(!file.exists(data)) {
+
+    load(paste0("data/", ch, ".rda"))
     
     raw = gsub(".rda", "_raw.rda", data)
     if(!file.exists(raw)) {
-
-      load(paste0("data/", ch, ".rda"))
     
       N = mget(paste0("net", sessions))
     
@@ -352,10 +364,9 @@ get_TERGM <- function(ch, sessions = 8:14, nboot = 1000) {
       X = NULL
     
       for(i in 1:n) {
-
-        msg("Networks to estimate:", n - i + 1, net %n% "legislature")
       
         net = N[[i]]
+        msg("Networks to estimate:", n - i + 1, net %n% "legislature")
 
         net %v% "female" = as.numeric(net %v% "sexe" == "F")
         net %v% "seniority" = net %v% "nb_mandats"
@@ -462,9 +473,11 @@ plot_TERGM <- function(models = "models/ergm.csv", key = "rw") {
   if(!file.exists(models)) {
     
     if(key == "rw")
-      d = dir("models/ergm", pattern = "(\\d|_lw|_rw).rda")
+      d = dir("models/ergm", pattern = "\\d+(_lw|_rw)?.rda")
     else if(key == "di")
-      d = dir("models/ergm", pattern = "(\\d|_un|_di).rda")
+      d = dir("models/ergm", pattern = "\\d+(_un|_di)?.rda")
+    else if(key == "yr_di")
+      d = dir("models/ergm", pattern = "\\d+_yr(_un|_di)?.rda")
 
     p = data.frame()
     for(i in d) {
@@ -497,7 +510,7 @@ plot_TERGM <- function(models = "models/ergm.csv", key = "rw") {
   p$type = ifelse(grepl("Both", p$term), as.character(p$term), "Network controls")
   p$ch = ifelse(grepl("^an", p$model), "Assemblée nationale", "Sénat")
   
-  if(key == "rw") {
+  if(grepl("rw", key)) {
 
     p$model = ifelse(grepl("_lw", p$model), "Leftwing\ngovernments",
                      ifelse(grepl("_rw", p$model), "Rightwing\ngovernments", "All governments\n(1986-2014)"))
@@ -507,8 +520,7 @@ plot_TERGM <- function(models = "models/ergm.csv", key = "rw") {
     m = merge(m, subset(p, ch == "Assemblée nationale" & grepl("Left", model))[, 1:3], by = "term", all = TRUE)
     m = merge(m, subset(p, ch == "Assemblée nationale" & grepl("Right", model))[, 1:3], by = "term", all = TRUE)
     
-  }
-  else if(key == "di") {
+  } else if(grepl("di", key)) {
 
     p$model = ifelse(grepl("_di", p$model), "Divided\ngovernments",
                      ifelse(grepl("_un", p$model), "Unified\ngovernments", "All governments\n(1986-2014)"))
@@ -542,13 +554,13 @@ plot_TERGM <- function(models = "models/ergm.csv", key = "rw") {
         sanitize.text.function = as.character,
         include.rownames = FALSE, file = paste0("paper/tables/ergm_", key, "an.tex"))
 
-  if(key == "rw") {
+  if(grepl("rw", key)) {
 
     m = subset(p, ch != "Assemblée nationale" & grepl("All", model))[, 1:3]
     m = merge(m, subset(p, ch != "Assemblée nationale" & grepl("Left", model))[, 1:3], by = "term", all = TRUE)
     m = merge(m, subset(p, ch != "Assemblée nationale" & grepl("Right", model))[, 1:3], by = "term", all = TRUE)
 
-  } else if(key == "di") {
+  } else if(grepl("di", key)) {
     
     m = subset(p, ch != "Assemblée nationale" & grepl("All", model))[, 1:3]
     m = merge(m, subset(p, ch != "Assemblée nationale" & grepl("Divided", model))[, 1:3], by = "term", all = TRUE)
@@ -602,7 +614,7 @@ plot_TERGM <- function(models = "models/ergm.csv", key = "rw") {
           panel.grid.minor = element_blank(),
           panel.grid.major.x = element_blank())
 
-  ggsave(paste0("models/ergm_", key, "diff.pdf"), height = 12, width = 9)
+  ggsave(paste0("models/ergm_", key, "_diff.pdf"), height = 12, width = 9)
 
   qplot(data = subset(p, !grepl("Both|GW|Edges", term)),
         y = b, x = model, ymin = b - 3 * se, ymax = b + 3 * se,
@@ -617,7 +629,8 @@ plot_TERGM <- function(models = "models/ergm.csv", key = "rw") {
           axis.text = element_text(color = "black"),
           panel.grid.minor = element_blank(),
           panel.grid.major.x = element_blank())
-  ggsave(paste0("models/ergm_", key, "cov.pdf"), height = 12, width = 9)
+
+  ggsave(paste0("models/ergm_", key, "_cov.pdf"), height = 12, width = 9)
 
   qplot(data = subset(p, grepl("GW(D|E)|Edges", term)),
         y = b, x = model, ymin = b - 3 * se, ymax = b + 3 * se,
@@ -632,7 +645,8 @@ plot_TERGM <- function(models = "models/ergm.csv", key = "rw") {
           axis.text = element_text(color = "black"),
           panel.grid.minor = element_blank(),
           panel.grid.major.x = element_blank())
-  ggsave(paste0("models/ergm_", key, "net.pdf"), height = 12, width = 9)
+
+  ggsave(paste0("models/ergm_", key, "_net.pdf"), height = 12, width = 9)
 
   print(unique(p$model))
   

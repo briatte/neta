@@ -17,14 +17,19 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
   master$year = year(master$date)
   stopifnot(exists("master"))
   
-  if(sessions == "yr")
+  if(sessions[1] == "yr")
     sessions = apply(expand.grid(8:14, 1986:2014), 1, paste0, collapse = ".")
   
-  if(10 %in% sessions & file %in% c("an", "se")) # for merged series only,
-    sessions = c(sessions, 10.2) # get unified government (no data for divided government)
-  
-  if(10 %in% sessions & file == "se") # for merged Senate series only,
-    sessions = c(sessions, 10.1, 10.2) # get divided and unified governments
+  # get divided and unified governments government periods
+
+  if(10 %in% sessions & file %in% c("an", "se"))
+    sessions = c(sessions, 10.2) # no data at 10.1
+
+  if(10 %in% sessions & file == "se")
+    sessions = c(sessions, 10.1)
+
+  if(13 %in% sessions & file %in% c("an", "se"))
+    sessions = c(sessions, 13.1, 13.2)
   
   for(i in sessions) {
     
@@ -33,7 +38,11 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
     else if(i == 10.1) # 1993-1995, leftwing weakly divided
       edges = subset(master, legislature == 10 & date < as.Date("1995-04-23") & !government & sample)$uid
     else if(i == 10.2) # 1995-1997, rightwing strongly unified
-      edges = subset(master, legislature == 10 & date > as.Date("1995-04-23") & !government & sample)$uid
+      edges = subset(master, legislature == 10 & date >= as.Date("1995-04-23") & !government & sample)$uid
+    else if(i == 13.1) # 2007-2011, rightwing strongly unified
+      edges = subset(master, legislature == 13 & date < as.Date("2011-09-25") & !government & sample)$uid
+    else if(i == 13.2) # 2011-2012, rightwing weakly unified (leftwing Senate)
+      edges = subset(master, legislature == 13 & date >= as.Date("2011-09-25") & !government & sample)$uid
     else {
       y = as.numeric(str_pad(gsub("\\d+\\.(\\d+)", "\\1", i), width = 4, side = "right", pad = "0"))
       edges = subset(master, legislature == as.integer(i) & year == y & !government & sample)$uid
@@ -215,9 +224,7 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
       v = net %n% "party_colors"
       b = net %n% "party_order"
       
-      # net %v% "size" = as.numeric(factor(quantile(net %v% "degree", c(0, .5, 1))))
-      # small = 3 + net %v% "size"
-      # large = 6 + net %v% "size"
+      net %v% "size" = 3 * as.numeric(factor(quantile(net %v% "degree", c(0, .5, 1))))
 
       del = which(is.na(net %v% "closeness"))
       # msg("Dropping:", length(del), "nodes from graph")
@@ -229,19 +236,24 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
                                  segment.alpha = .5,
                                  node.group = net %v% "party", node.color = net %n% "party_colors",
                                  size = 0) +
-                             scale_color_manual("", values = v, breaks = b) +
-                             geom_point(size = 9, alpha = 1/3) +
-                             geom_point(size = 6, alpha = 1/2) +
+#                              scale_color_manual("", values = v, breaks = b,
+#                                                 guide  = guide_legend(override.aes = list(size = 6))) +
+#                              geom_point(aes(size = net %v% "size"), alpha = 1/3) +
+#                              geom_point(size = 3, alpha = 1/2) +
+                                 scale_color_manual("", values = v, breaks = b,
+                                                    guide  = guide_legend(override.aes = list(size = 6))) +
+                                 geom_point(size = 9, alpha = 1/3) +
+                                 geom_point(size = 6, alpha = 1/2) +
+                                 scale_size_area(max_size = 9) +
+                                 guides(size = FALSE) + 
+                                 scale_size_area(max_size = 9) +
+                                 guides(size = FALSE) + 
                              theme(text = element_text(size = 28),
                                    legend.key = element_rect(colour = "white", fill = NA),
                                    legend.key.size = unit(28, "pt")))
       
       # save plot
       ggsave(plot, g, width = 11, height = 9)
-      
-#       # rename objects
-#       assign(paste0("ggnet", i), g)
-#       assign(paste0("colors", i), v)
 
     }
     
@@ -249,7 +261,7 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
   
   data = paste0("data/", file, ".rda")
   
-  save(list = ls(pattern = "^(amendments|bills|legislation|sponsors)|(net|edges|nodes|colors|ggnet)[0-9]+"), 
+  save(list = ls(pattern = "^(amendments|bills|colors|legislation|sponsors)|(net|edges|nodes)[0-9]+"), 
        file = data)
   
   if(verbose)

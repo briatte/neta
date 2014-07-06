@@ -455,7 +455,7 @@ plot_groups <- function(sessions = 8:14) {
 #' @keywords paper
 plot_attributes <- function(type = "all", sessions = 8:14) {
   
-  if(sessions == "yr") {
+  if(sessions[1] == "yr") {
 
     sessions = dir("data", pattern = "(an|se)[0-9]{1,2}.[0-9]{4}.rda")
     sessions = table(str_extract(sessions, "\\d+\\.\\d+"))
@@ -475,16 +475,23 @@ plot_attributes <- function(type = "all", sessions = 8:14) {
   # mark A10 as faulty
   da$faulty = with(da, chamber == "Assemblée nationale" & Legislature == 10 & variable %in% c("Centralization", "Distance", "Global.Clustering", "Modularity", "Modularity.Max", "Modularity.Ratio", "Betweenness", "Local.Clustering", "Constraint"))
 
+  labels = sessions
+  if(!all(is.numeric(sessions))) {
+    sessions = c(1986, 1988, 1993, 1995, 1997, 2002, 2007, 2012, 2014)
+    labels = c(86, 88, 93, 95, 97, "02", "07", 12, 14)
+    da$Legislature = as.numeric(gsub("(\\d+)\\.(\\d{4})", "\\2", da$Legislature))
+  }
+    
   g = qplot(data = subset(da, !faulty), x = Legislature, y = value,
             color = chamber, geom = "line") +
     geom_point(data = subset(da, faulty), color = "grey50") +
-    scale_x_continuous(breaks = sessions) +
+    scale_x_continuous(breaks = sessions, labels = labels) +
     scale_colour_brewer("", palette = "Set2") +
     facet_wrap(~ variable, ncol = 3, scales = "free_y") +
     labs(y = NULL, x = "\nLegislature (1986-2014)") +
     theme_grey(16) +
     theme(legend.position = "bottom", panel.grid = element_blank())
-
+    
   if(type != "bi")
     g = g +
       geom_point(data = dots_an) +
