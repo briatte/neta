@@ -96,44 +96,6 @@ plot_data <- function(x, type = "all", verbose = TRUE) {
 
 }
 
-#' Plot a weighted cosponsorship network
-#' 
-#' @keywords paper draft
-plot_network <- function(net, mode = "kamadakawai", file = NULL,
-                           size = 1, max_size = 6, alpha = .5,
-                           width = 11, height = 9) {
-    
-  v = net %n% "party_colors"
-  b = net %n% "party_order"
-  
-  sizer = scale_size_area(name = expression(log(C[B])), max_size = max_size, 
-                          breaks = seq(2.5, 10, by = 2.5),
-                          labels = gsub("\\.0", "", as.character(seq(2.5, 10, by = 2.5), 1)))
-  guide = guides(color = guide_legend(override.aes = list(size = max_size)))
-  color = scale_color_manual("", values = v, breaks = b)
-  clean = theme(text = element_text(size = 24),
-                legend.key = element_rect(colour = "white", fill = NA),
-                legend.key.size = unit(24, "pt"))
-  
-  g = suppressMessages(ggnet(net, mode = mode,
-                             node.group = net %v% "party",
-                             node.color = net %n% "party_colors",
-                             segment.color = factor(colors[ nodes[ net %e% "source", "party" ] ]),
-                             segment.alpha = .5, size = 1) +
-                         geom_point(aes(size = log(net %v% "betweenness")),
-                                    alpha = .75) +
-                         geom_rug(sides = "lrtb", size = .5) +
-                         coord_equal() +
-                         guide +
-                         sizer + 
-                         color +
-                         clean)
-  
-  if(!is.null(file)) ggsave(file, g, width = width, height = height)
-  return(g)
-  
-}
-
 #' Plot legislation outcomes
 #'
 #' @keywords paper draft

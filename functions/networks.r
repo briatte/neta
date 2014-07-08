@@ -108,7 +108,7 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
         # identify missing nodes
         missing = !network.vertex.names(net) %in% nodes$nom
         
-        if(sum(missing > 0)) {
+        if(any(missing)) {
           
           warning(
             paste("Dropping:", sum(missing), "unidentified sponsor(s)",
@@ -224,11 +224,15 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
       v = net %n% "party_colors"
       b = net %n% "party_order"
       
-      net %v% "size" = 3 * as.numeric(factor(quantile(net %v% "degree", c(0, .5, 1))))
+      s = quantile(net %v% "degree", c(0, 1/3, 2/3, 1))
+      net %v% "size" = as.numeric(cut(net %v% "degree", breaks = unique(s), include.lowest = TRUE))
 
       del = which(is.na(net %v% "closeness"))
       # msg("Dropping:", length(del), "nodes from graph")
       network::delete.vertices(net, del)
+      
+      # super-assign
+      net <<- net
       
       # color edges by source node
       g = suppressMessages(ggnet(net,
@@ -236,19 +240,19 @@ get_networks <- function(sessions, file, verbose = TRUE, plot = FALSE, export = 
                                  segment.alpha = .5,
                                  node.group = net %v% "party", node.color = net %n% "party_colors",
                                  size = 0) +
-#                              scale_color_manual("", values = v, breaks = b,
-#                                                 guide  = guide_legend(override.aes = list(size = 6))) +
-#                              geom_point(aes(size = net %v% "size"), alpha = 1/3) +
-#                              geom_point(size = 3, alpha = 1/2) +
-                                 scale_color_manual("", values = v, breaks = b,
-                                                    guide  = guide_legend(override.aes = list(size = 6))) +
-                                 geom_point(size = 9, alpha = 1/3) +
-                                 geom_point(size = 6, alpha = 1/2) +
-                                 scale_size_area(max_size = 9) +
-                                 guides(size = FALSE) + 
-                                 scale_size_area(max_size = 9) +
-                                 guides(size = FALSE) + 
-                             theme(text = element_text(size = 28),
+                             geom_point(aes(size = 3 + 3 * net %v% "size", color = net %v% "party"), alpha = 1/3) +
+                             geom_point(aes(size = 3, color = net %v% "party"), alpha = 1/2) +
+                             # scale_color_manual("", values = v, breaks = b,
+                             # guide  = guide_legend(override.aes = list(size = 6))) +
+                             # geom_point(aes(size = net %v% "size"), alpha = 1/3) +
+                             # geom_point(size = 3, alpha = 1/2) +
+                             scale_color_manual("", values = v, breaks = b) +
+#                              geom_point(size = 9, alpha = 1/3) +
+#                              geom_point(size = 6, alpha = 1/2) +
+                             scale_size_area(max_size = 9) +
+                             guides(size = FALSE,
+                                    color  = guide_legend(override.aes = list(alpha = 1/5, size = 6))) + 
+                             theme(text = element_text(size = 28, color = "grey25"),
                                    legend.key = element_rect(colour = "white", fill = NA),
                                    legend.key.size = unit(28, "pt")))
       

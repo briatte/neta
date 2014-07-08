@@ -3,7 +3,9 @@
 #' The models are run over leftwing/rightwing and divded/unified government
 #' configuration
 #' @param sessions 8:14 or any fragment of that, or "yr" for the split-year series
-get_models <- function(key, sessions = 8:14) {
+#' @param config either "di" for unified/divided government models,
+#' or "rw" for leftwing/rightwing government (control) models
+get_models <- function(key, sessions = 8:14, config = "di") {
   
   if(key == "ergmm") {
 
@@ -17,8 +19,8 @@ get_models <- function(key, sessions = 8:14) {
     get_TERGM(ch = "an", sessions, nboot = 1000)
     get_TERGM(ch = "se", sessions, nboot = 1000)
 
-    # leftwing/rightwing and divided/unified models
-    for(j in c("lw", "rw")) { # , "di", "un"
+    # divided/unified models
+    for(j in c(config, ifelse(config == "di", "un", "lw"))) {
 
       if(sessions[1] == "yr") j = paste0("yr_", j)
       get_TERGM(ch = "se", sessions = j, nboot = 1000)
@@ -26,19 +28,12 @@ get_models <- function(key, sessions = 8:14) {
 
     }
 
-    if(sessions[1] == "yr") {
-      
-      # legislature-year level
-      plot_TERGM("models/ergm_yr_rw.csv", key = "yr_rw")
-      plot_TERGM("models/ergm_yr_di.csv", key = "yr_di")
-      
-    } else {
-
-      # legislature level
-      plot_TERGM("models/ergm_rw.csv", key = "rw")
-#       plot_TERGM("models/ergm_di.csv", key = "di")
-      
-    }
+    if(sessions[1] == "yr")
+      plot_TERGM(paste0("models/ergm_yr_", config, ".csv"),
+                 key = paste0("yr_", config))
+    else
+      plot_TERGM(paste0("models/ergm_", config, ".csv"),
+                 key = config)
     
   }
 

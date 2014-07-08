@@ -36,9 +36,9 @@ get_ameli(sql = sqla  , sessions = 11:14) # amendments
 # network model, estimated over legislatures
 get_networks(8:14, file = "an", export = FALSE)  # National Assembly
 get_networks(8:14, file = "se", export = FALSE)  # Senate
-get_models("ergm") # bootstrapped TERGM
+get_models("ergm") # bootstrapped TERGMs
 
-# # network model, estimated over legislature-years
+# network model, estimated over legislature-years
 # get_networks("yr", file = "an", verbose = TRUE)  # National Assembly
 # get_networks("yr", file = "se", verbose = FALSE) # Senate
 # get_models("ergm") # bootstrapped TERGM
