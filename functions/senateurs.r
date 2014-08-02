@@ -170,7 +170,7 @@ get_senateurs <- function(sessions = 1:14, verbose = TRUE) {
     # get senators
     senateurs = rbind(get_senat("anciens-senateurs"),
                       get_senat("senateurs"))
-    senateurs = filter(senateurs, legislature %in% sessions)
+    senateurs = subset(senateurs, legislature %in% sessions)
     
     if(verbose)
       msg("Parsing:", n_distinct(senateurs$nom), "senators")

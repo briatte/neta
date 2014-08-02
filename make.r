@@ -29,8 +29,8 @@ get_ameli(sql = sqla  , sessions = 11:14) # amendments
 
 # # split series networks
 # get_networks(  8:14 , file = "bi_an") # National Assembly bills
-# get_networks( 12:14 , file = "am_an") # National Assembly amendments
 # get_networks(  8:14 , file = "bi_se") # Senate bills
+# get_networks( 12:14 , file = "am_an") # National Assembly amendments
 # get_networks( 11:14 , file = "am_se") # Senate amendments
 
 # network model, estimated over legislatures

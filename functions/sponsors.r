@@ -3,7 +3,6 @@
 #' @param update force create all sponsor logs (off by default)
 get_bills <- function(sessions = 8:14, update = FALSE) {
   
-  sessions = 8:14
   load("raw/an/propositions.rda")
   load("raw/an/resolutions.rda")
   load("raw/an/resol-art34-1.rda")

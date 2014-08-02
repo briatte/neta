@@ -121,15 +121,12 @@ parse_data <- function(data, sponsorships, sponsors,
 
   # paste sponsor lists (does not yet take by.x and by.y into account)
   auteurs = unique(sponsors$nom[ sponsors$sample ])
-  auteurs = sponsorships %.% 
-    filter(sample & status %in% c("author", "cosponsor")) %.%
-    group_by(uid) %.% 
-    summarise(
-      sample = ifelse(all(is.na(name)), FALSE, sum(name %in% auteurs, na.rm = TRUE) > 1)
-    )
+  auteurs = summarise(group_by(subset(sponsorships, status %in% c("author", "cosponsor")), uid),
+      sample = ifelse(all(is.na(name)), FALSE, sum(name %in% auteurs, na.rm = TRUE) > 1))
 
   # merge sponsor lists
-  data = merge(data[, c("legislature", "uid", "date", "t", "url", "texte", "titre", "sort", "government") ], auteurs, by = "uid", all = TRUE)#
+  data = merge(data[, c("legislature", "uid", "date", "t", "url", "texte", "titre", "sort", "government") ],
+               auteurs, by = "uid", all = TRUE)
 
   # check each legislature contains all amendment sponsors
   for(i in unique(data$legislature)) {
@@ -219,14 +216,14 @@ parse_time <- function(data) {
                   ordered = TRUE)
 
   x = cbind(data, x)
-  x = filter(x, !is.na(date))
+  x = subset(x, !is.na(date))
 
   missing = nrow(data) - nrow(x)
 
   # rewrite tse if the data contain more than one legislature
   if("legislature" %in% names(x)) {
   
-    x = filter(x,
+    x = subset(x,
                (legislature == 8 &
                  (date >= as.Date(ymd("1986-03-16"))  & 
                   date < as.Date(ymd("1988-06-05")))) |
@@ -250,7 +247,7 @@ parse_time <- function(data) {
                   date < as.Date(ymd("2017-06-10")))) # expected
               )
 
-    x = filter(x, !is.na(legislature))
+    x = subset(x, !is.na(legislature))
     x = group_by(x, legislature)
     x = mutate(x, t = as.numeric(julian(date, origin = min(date))))
 

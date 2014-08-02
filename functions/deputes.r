@@ -204,7 +204,7 @@ get_deputes <- function(sessions = 1:14, verbose = TRUE) {
     m = parse_date_time(substr(deputes$mandat, 1, 10), "%d/%m/%y")
     deputes$legislature = parse_legislature(m, subset = sessions)
 
-    deputes = filter(deputes, legislature %in% sessions)
+    deputes = subset(deputes, legislature %in% sessions)
     
     # fix extra content in party groups
     deputes$groupe_sigle = gsub("(\\s|-)+([R|r]éélu|Invalidé|\\d+)(.*)", "", deputes$groupe_sigle)

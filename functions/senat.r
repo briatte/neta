@@ -88,7 +88,7 @@ get_ameli <- function(file = "data/am_se.rda", sql,
     # legislatures (endpoints at end of legislative election year)
     amendments$date = ymd(substr(amendments$date, 1, 10))
     amendments$legislature = parse_legislature(amendments$date, subset = sessions)
-    amendments = filter(amendments, legislature %in% sessions)
+    amendments = subset(amendments, legislature %in% sessions)
 
     # timestamps
     amendments$date = as.Date(amendments$date)

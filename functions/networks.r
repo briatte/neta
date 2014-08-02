@@ -315,10 +315,10 @@ get_edges <- function(edges,
   # raw count of unique ties
   count = table( edges$UID )
   
-  # weighted quantity of bills cosponsored (Fowler 2006)
+  # weighted quantity of bills cosponsored (Fowler 2006, directed network)
   edges = aggregate(W ~ UID, sum, data = edges)  
   
-  # paste to save later
+  # paste raw counts to save later
   count = count[ edges$UID ]
   
   # reexpand to (weighted) edgelist
@@ -329,7 +329,7 @@ get_edges <- function(edges,
   edges = data.frame(na.omit(edges))
   net = network(edges[, 1:2], directed = TRUE)
   
-  # add edge weights to one-mode network
+  # add edge weights and raw counts to one-mode network
   network::set.edge.attribute(net, "source", edges[, 1])
   network::set.edge.attribute(net, "target", edges[, 2])
   network::set.edge.attribute(net, "weight", edges[, 3])
