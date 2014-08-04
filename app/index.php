@@ -47,7 +47,7 @@
   else
     $caption = '<p>This graph shows French Senators during the ' . $page . 'th&nbsp;legislature. A link between two Senators indicates that they have cosponsored at least one amendment, bill or resolution.';
 
-  $caption = $caption . ' Their size is proportional to their <a href="http://toreopsahl.com/tnet/weighted-networks/node-centrality/">weighted degree</a>. See <a href="plots.html">this page</a> for more plots.</p>'
+  $caption = $caption . ' Their size is proportional to their <a href="http://toreopsahl.com/tnet/weighted-networks/node-centrality/">weighted degree</a>.</p>'
 ?>
 
 <!doctype html>
@@ -65,11 +65,11 @@
   <meta charset="utf-8">
   <link href="http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600" rel="stylesheet" type="text/css" />
   <link href="/assets/styles.css" rel="stylesheet" type="text/css" />
-  <link rel="stylesheet" href="/font-awesome-4.0.3/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/assets/font-awesome-4.1.0/css/font-awesome.min.css">
   <style type="text/css" media="screen">
   html, body {
     font: 24px/150% "Source Sans Pro", sans-serif;
-    background-image: url("/assets/hemicycle_<?php echo $ch; ?>.jpg");
+    background-image: url("hemicycle_<?php echo $ch; ?>.jpg");
     color: #fff;
     margin: 0;
     padding:0;
@@ -77,17 +77,17 @@
     height: 100%;
   }
   </style>
-  <!--[if lt IE 8]>
-    <link rel="stylesheet" href="/assets/stylesheets/social_foundicons_ie7.css">
-  <![endif]-->
+  <script src="/assets/sigmajs-release-v1.0.2/sigma.min.js"></script>
+  <script src="/assets/sigmajs-release-v1.0.2/plugins/sigma.parsers.gexf.min.js"></script>
+  <script src="/assets/sigmajs-release-v1.0.2/plugins/sigma.layout.forceAtlas2.min.js"></script>
 </head>
 <body>
 
 <div id="sigma-container">
   <div id="controls" class="bg_<?php echo $ch; ?>">
-    <h1>cosponsorship networks</h1>    
+    <h1>french parliament</h1>    
     <h2><a href="<?php if($ch=="an") echo "http://assemblee-nationale.fr/"; else echo "http://senat.fr/"; ?>" title="<?php echo $chamber; ?>">
-           <img src="/assets/logo_<?php echo $ch; ?>.png" height="25" alt="logo">
+           <img src="logo_<?php echo $ch; ?>.png" height="25" alt="logo">
         </a>&nbsp;<?php echo $chamber . ", " . $array[ $page ]; if($ch=="se") echo "<br>&nbsp;"; ?></h2>
 
     <p>Chamber&nbsp;&nbsp;
@@ -135,14 +135,40 @@
         <input type="checkbox" id="showSparse" />
         Weak ties
       </label>
-      <br>
-      Download&nbsp;&nbsp;<i class="fa fa-file-o"></i>&nbsp;&nbsp;<a href="<?php echo $ch . $page; ?>.gexf" title="Download this graph (GEXF, readable with Gephi)">network</a>&nbsp;&nbsp;<i class="fa fa-files-o"></i>&nbsp;&nbsp;<a href="<?php echo $ch; ?>.zip" title="Download all <?php echo $chamber; ?> graphs (GEXF, readable with Gephi)">full series</a></p>
-    <p><a href="#" id="recenter-camera" class="button" title="Reset graph to initial zoom position.">reset zoom</a>&nbsp;&nbsp;<a href="#" id="toggle-layout" class="button" title="Animate with Force Atlas 2.">Animate</a> <small><a href="https://gephi.org/2011/forceatlas2-the-new-version-of-our-home-brew-layout/" title="Details on the Force Atlas 2 algorithm."><i class="fa fa-info-circle"></i></a></small></p>
+    </p>
+
     <footer>
-      <p>Inspired by <a href="http://coulmont.com/blog/2011/09/02/travail-de-deputes/">Baptiste&nbsp;Coulmont</a> and <a href="http://jhfowler.ucsd.edu/cosponsorship.htm">James&nbsp;Fowler</a>, built with <a href="http://gexf.net/format/" title="GEXF file format (Gephi)">GEXF</a>, <a href="http://www.r-project.org/" title="The R Project for Statistical Computing">R</a> and <a href="http://sigmajs.org/" title"JavaScript library dedicated to graph drawing">sigma.js</a>. 
-      Background photo by <?php if($ch == "an") echo "<a href='http://commons.wikimedia.org/wiki/File:Panorama_de_l%27h%C3%A9micyle_de_l%27assembl%C3%A9e_nationale.jpg' title='Original photograph by Richard Ying and Tangui Morlier'>Richard Ying and Tangui Morlier"; else echo "<a href='https://commons.wikimedia.org/wiki/File:L%27h%C3%A9micycle_du_S%C3%A9nat_fran%C3%A7ais_en_septembre_2009.jpg' title='Original photograph by Romain Vincens'>Romain Vincens"; ?></a> (Wikimedia).</p>
+
+      <p><a href="#" id="recenter-camera" class="button" title="Reset graph to initial zoom position.">reset zoom</a>&nbsp;&nbsp;<a href="#" id="toggle-layout" class="button" title="Animate with Force Atlas 2.">Animate</a> <small><a href="https://gephi.org/2011/forceatlas2-the-new-version-of-our-home-brew-layout/" title="Details on the Force Atlas 2 algorithm."><i class="fa fa-info-circle"></i></a></small></p>
       <p><a href="http://twitter.com/share?text=Cosponsorship%20networks%20in%20the%20French%20Parliament,%20by%20@phnk:&amp;url=<?php echo 'http://' . $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"]; ?>" class="button" title="Share this page on Twitter."><i class="fa fa-twitter"></i> Tweet</a>&nbsp;&nbsp;<a href="https://github.com/briatte/neta" class="button" title="Get the code and data from GitHub."><i class="fa fa-github"></i> Code</a></p>
+
+      <p class="info">
+        Data from <a href="<?php if($ch=="an") echo 'http://www.assemblee-nationale.fr'; else echo 'http://www.senat.fr'; ?>"><?php if($ch=="an") echo 'assemblee-nationale.fr'; else echo 'data.senat.fr'; ?></a> (April 6, 2014).<br>
+        
+        Download&nbsp;&nbsp;<i class="fa fa-file-o"></i>&nbsp;&nbsp;<a href="<?php echo $ch . $page; ?>.gexf" title="Download this graph (GEXF, readable with Gephi)">network</a>&nbsp;&nbsp;<i class="fa fa-files-o"></i>&nbsp;&nbsp;<a href="<?php echo $ch; ?>.zip" title="Download all <?php echo $chamber; ?> graphs (GEXF, readable with Gephi)">full series</a>&nbsp;&nbsp;<i class="fa fa-file-image-o"></i>&nbsp;&nbsp;<a href="plots.html">plots</a><br>
+
+        Background photo by <?php if($ch == "an") echo "<a href='http://commons.wikimedia.org/wiki/File:Panorama_de_l%27h%C3%A9micyle_de_l%27assembl%C3%A9e_nationale.jpg' title='Original photograph by Richard Ying and Tangui Morlier'>Richard Ying and Tangui Morlier"; else echo "<a href='https://commons.wikimedia.org/wiki/File:L%27h%C3%A9micycle_du_S%C3%A9nat_fran%C3%A7ais_en_septembre_2009.jpg' title='Original photograph by Romain Vincens'>Romain Vincens"; ?></a> (Wikimedia).
+      </p>
+      
+      <div id="menu">
+        <p><i class="fa fa-eye"></i>&nbsp;About</p>
+        <ul>
+          <li><h3>About</h3></li>
+          <li class="intro">This visualization was built with <a href="http://www.r-project.org/" title="The R Project for Statistical Computing">R</a> and <a href="http://sigmajs.org/" title"JavaScript library dedicated to graph drawing">sigma.js</a>.</li>
+          <li>It is part of a series inspired by <a href="http://coulmont.com/blog/2011/09/02/travail-de-deputes/">Baptiste Coulmont</a> and <a href="http://jhfowler.ucsd.edu/cosponsorship.htm">James Fowler</a>.</li>
+          <li class="intro">Follow the links below to take a look at other parliaments.</li>
+          <li><a href="/belparl">Belgium</a></li>
+          <li><a href="/folketinget">Denmark</a></li>
+          <li><a href="/epam">European Union</a></li>
+          <!-- <li><a href="/neta">France</a></li> -->
+          <li><a href="/stortinget">Norway</a></li>
+          <li><a href="/riksdag">Sweden</a></li>
+          <li><a href="/marsad">Tunisia</a></li>
+        </ul>
+      </div>
+
     </footer>
+
     <div id="graph-container"></div>
   </div>
   <div id="caption" class="bg_<?php echo $ch; ?>">
@@ -150,10 +176,6 @@
   </div>
 
 </div>
-
-<script src="/sigmajs-release-v1.0.2/sigma.min.js"></script>
-<script src="/sigmajs-release-v1.0.2/plugins/sigma.parsers.gexf.min.js"></script>
-<script src="/sigmajs-release-v1.0.2/plugins/sigma.layout.forceAtlas2.min.js"></script>
 
 <script>
 function decimalAdjust(type, value, exp) {
