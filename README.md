@@ -1,24 +1,15 @@
 
-# Legislative cosponsorship networks in the French Parliament
-
 ![](preview.png)
 
-> See an [interactive visualization](http://briatte.org/neta/) of the results, or read the draft documentation:
+This repository plots legislative cosponsorship networks in the French Parliament. Its preliminary results were presented at [Open Legislative Data Politics](http://www.lafabriquedelaloi.fr/conference/) I (2012) and II (2014) in Paris.
+
+See the [interactive visualization](http://briatte.org/parlement/) of the bill cosponsorships, the [simplified code behind it](https://github.com/briatte/parlement), or the [complete project](https://github.com/briatte/parlviz).
+
+# DOCS
 
 * [replication instructions](HOWTO.md)
 * [data codebooks](data/README.md)
 * [model specifications](models/README.md)
-* [conference slides][lawfactory2014]
-
-<!-- 
-
-* [working paper][paper]
-
-[paper]: /
-
--->
-
-[lawfactory2014]: http://f.briatte.org/research/slides-lawfactory2014/
 
 # THANKS
 
@@ -37,4 +28,3 @@
 [stef]: https://github.com/stef
 [rc]: http://www.regardscitoyens.org/
 [roux]: http://www.medialab.sciences-po.fr/people/benjamin-ooghe-tabanou/
-
